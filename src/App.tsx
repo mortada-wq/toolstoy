@@ -1,46 +1,29 @@
-import { useState } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
-import { Hero } from './components/Hero'
-import { Showcase } from './components/Showcase'
-import { DemoModal } from './components/DemoModal'
-import { HowItWorks } from './components/HowItWorks'
-import { WorksAnywhere } from './components/WorksAnywhere'
-import { CTASection } from './components/CTASection'
 import { Footer } from './components/Footer'
-import { type LayoutType } from './components/ShowcaseCard'
-
-const LAYOUTS: LayoutType[] = [
-  'Side by Side',
-  'Character Top',
-  'Chat Focus',
-  'Mirror',
-  'Immersive',
-  'Compact',
-  'Cinematic',
-]
+import { ScrollToTop } from './components/ScrollToTop'
+import { HomePage } from './pages/HomePage'
+import { FeaturesPage } from './pages/FeaturesPage'
+import { PricingPage } from './pages/PricingPage'
+import { SignInPage } from './pages/SignInPage'
+import { SignUpPage } from './pages/SignUpPage'
 
 function App() {
-  const [selectedCard, setSelectedCard] = useState<number | null>(null)
-
   return (
-    <>
+    <BrowserRouter>
+      <ScrollToTop />
       <Navbar />
       <main>
-        <Hero />
-        <Showcase onCardClick={(index) => setSelectedCard(index)} />
-        <HowItWorks />
-        <WorksAnywhere />
-        <CTASection />
-        <Footer />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/signin" element={<SignInPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+        </Routes>
       </main>
-
-      {selectedCard !== null && (
-        <DemoModal
-          layout={LAYOUTS[selectedCard]}
-          onClose={() => setSelectedCard(null)}
-        />
-      )}
-    </>
+      <Footer />
+    </BrowserRouter>
   )
 }
 

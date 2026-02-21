@@ -1,12 +1,13 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import logoSrc from '@/assets/Finaltoolstoy.svg'
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const navLinks = [
-    { label: 'Features', href: '#features' },
-    { label: 'Pricing', href: '#pricing' },
+    { label: 'Features', href: '/features' },
+    { label: 'Pricing', href: '/pricing' },
     { label: 'Docs', href: '#docs' },
   ]
 
@@ -14,39 +15,39 @@ export function Navbar() {
     <>
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 h-14 md:h-16 flex items-center justify-between pl-6 pr-4 md:pl-10 md:pr-8">
       {/* Logo - top-left with breathable padding */}
-      <a href="/" className="flex-shrink-0 py-2">
+      <Link to="/" className="flex-shrink-0 py-2">
         <img
           src={logoSrc}
           alt="toolstoy"
           className="h-[1.6rem] sm:h-[1.8rem] w-auto object-contain"
           style={{ color: 'rgba(105, 105, 105, 1)', opacity: 0.73 }}
         />
-      </a>
+      </Link>
 
       {/* Desktop nav */}
       <div className="hidden md:flex items-center gap-10 flex-1 justify-center">
         {navLinks.map((link) => (
-          <a
+          <Link
             key={link.label}
-            href={link.href}
+            to={link.href}
             className="text-toolstoy-nearblack hover:text-toolstoy-muted font-normal text-sm tracking-[0.02em] transition-colors duration-200"
           >
             {link.label}
-          </a>
+          </Link>
         ))}
       </div>
 
       {/* Desktop CTA */}
       <div className="hidden md:flex items-center gap-6">
-        <a href="#signin" className="text-toolstoy-nearblack font-normal text-sm tracking-[0.02em] hover:text-toolstoy-muted transition-colors duration-200">
+        <Link to="/signin" className="text-toolstoy-nearblack font-normal text-sm tracking-[0.02em] hover:text-toolstoy-muted transition-colors duration-200">
           Sign In
-        </a>
-        <a
-          href="#start"
+        </Link>
+        <Link
+          to="/signup"
           className="border border-gray-300 bg-gray-50 text-toolstoy-nearblack font-normal text-sm px-5 py-2.5 rounded-lg transition-all duration-200 hover:bg-gray-100 hover:border-gray-400 min-w-[44px] min-h-[44px] flex items-center justify-center"
         >
           Start Free
-        </a>
+        </Link>
       </div>
 
       {/* Mobile hamburger */}
@@ -75,25 +76,25 @@ export function Navbar() {
     >
       <div className="flex flex-col items-center py-6 px-4 gap-1">
         {navLinks.map((link) => (
-          <a
+          <Link
             key={link.label}
-            href={link.href}
+            to={link.href}
             onClick={() => setMobileOpen(false)}
             className="w-full text-center text-toolstoy-nearblack font-normal text-sm py-3 min-h-[48px] flex items-center justify-center"
           >
             {link.label}
-          </a>
+          </Link>
         ))}
-        <a href="#signin" className="w-full text-center text-toolstoy-nearblack font-normal text-sm py-3 min-h-[48px] flex items-center justify-center">
+        <Link to="/signin" className="w-full text-center text-toolstoy-nearblack font-normal text-sm py-3 min-h-[48px] flex items-center justify-center" onClick={() => setMobileOpen(false)}>
           Sign In
-        </a>
-        <a
-          href="#start"
+        </Link>
+        <Link
+          to="/signup"
           onClick={() => setMobileOpen(false)}
           className="w-full mt-4 border border-gray-300 bg-gray-50 text-toolstoy-nearblack font-normal text-sm py-3.5 rounded-lg text-center min-h-[44px] flex items-center justify-center hover:bg-gray-100"
         >
           Start Free
-        </a>
+        </Link>
       </div>
     </div>
     </>

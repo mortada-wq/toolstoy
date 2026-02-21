@@ -2,9 +2,17 @@
 
 B2B SaaS platform that transforms any e-commerce product into an animated AI character — a talking assistant that lives on any website as a two-line JavaScript embed.
 
-## Phase 1 — Static Homepage
+## Phase 1 — Static Homepage ✓
 
-Frontend-only. No backend, auth, or database in this phase.
+Frontend-only. No backend, auth, or database.
+
+## Phase 2 — Routing, Pages & Micro-Animations ✓
+
+- React Router v6 (/, /features, /pricing, /signin, /signup)
+- Scroll-triggered reveal animations (Intersection Observer)
+- 4 new pages: Features, Pricing, Sign In, Sign Up
+- Navbar links now navigate between pages
+- Still NO backend, auth, or API calls
 
 ### Run locally
 
@@ -39,7 +47,7 @@ Output: `dist/`
 ```
 src/
 ├── assets/
-│   └── Finaltoolstoy.svg    # Logo (white on dark)
+│   └── Finaltoolstoy.svg
 ├── components/
 │   ├── Navbar.tsx
 │   ├── Hero.tsx
@@ -49,11 +57,27 @@ src/
 │   ├── HowItWorks.tsx
 │   ├── WorksAnywhere.tsx
 │   ├── CTASection.tsx
-│   └── Footer.tsx
+│   ├── Footer.tsx
+│   ├── ScrollReveal.tsx
+│   └── FAQAccordion.tsx
+├── pages/
+│   ├── HomePage.tsx
+│   ├── FeaturesPage.tsx
+│   ├── PricingPage.tsx
+│   ├── SignInPage.tsx
+│   └── SignUpPage.tsx
 ├── App.tsx
 ├── main.tsx
 └── index.css
 ```
+
+### SPA routing (Amplify)
+
+For direct URLs (e.g. toolstoy.app/features) to work, add a redirect in **Amplify Console → Hosting → Redirects**:
+
+- **Source:** `</^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>`
+- **Target:** `/index.html`
+- **Type:** 200 (rewrite)
 
 ### Tech stack
 

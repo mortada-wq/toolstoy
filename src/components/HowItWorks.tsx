@@ -1,3 +1,5 @@
+import { ScrollReveal } from './ScrollReveal'
+
 export function HowItWorks() {
   const steps = [
     {
@@ -30,8 +32,9 @@ export function HowItWorks() {
         </p>
 
         <div className="mt-16 flex flex-col md:flex-row gap-12 md:gap-12">
-          {steps.map((step) => (
-            <div key={step.number} className="flex-1 relative min-w-0">
+          {steps.map((step, index) => (
+            <ScrollReveal key={step.number} delay={index * 80}>
+            <div className="flex-1 relative min-w-0">
               <span className="absolute -top-2 left-0 font-light text-[96px] text-gray-200 leading-none select-none -z-0">
                 {step.number}
               </span>
@@ -42,6 +45,7 @@ export function HowItWorks() {
                 {step.description}
               </p>
             </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>

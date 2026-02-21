@@ -1,4 +1,5 @@
 import { ShowcaseCard, type LayoutType } from './ShowcaseCard'
+import { ScrollReveal } from './ScrollReveal'
 
 const CARDS: { layoutName: LayoutType; characterName: string; productType: string }[] = [
   { layoutName: 'Side by Side', characterName: 'Character Name', productType: 'Product Type' },
@@ -27,13 +28,14 @@ export function Showcase({ onCardClick }: ShowcaseProps) {
 
         <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
           {CARDS.map((card, index) => (
-            <ShowcaseCard
-              key={card.layoutName}
-              layoutName={card.layoutName}
-              characterName={card.characterName}
-              productType={card.productType}
-              onClick={() => onCardClick(index)}
-            />
+            <ScrollReveal key={card.layoutName} delay={index * 80}>
+              <ShowcaseCard
+                layoutName={card.layoutName}
+                characterName={card.characterName}
+                productType={card.productType}
+                onClick={() => onCardClick(index)}
+              />
+            </ScrollReveal>
           ))}
         </div>
       </div>
