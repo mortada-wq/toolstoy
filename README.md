@@ -14,6 +14,17 @@ Frontend-only. No backend, auth, or database.
 - Navbar links now navigate between pages
 - Still NO backend, auth, or API calls
 
+## Phase 3 — Merchant Dashboard & Character Studio ✓
+
+- Protected layout (dashboard shell — no real auth)
+- Merchant Dashboard: stats, character cards, activity, knowledge gaps alert
+- Character Studio: 5-step wizard (Product → Character → Personality → Knowledge → Launch)
+- My Characters: grid with filters, 3-dot menu
+- Widget Settings: embed code with functional Copy button
+- Edmund admin dashboard: health banner, merchant table, alerts
+- Sign In / Sign Up redirect to /dashboard (dummy)
+- Still NO backend, auth, or API calls
+
 ### Run locally
 
 ```bash

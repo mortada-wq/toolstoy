@@ -1,7 +1,14 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import logoSrc from '@/assets/Finaltoolstoy.svg'
 
 export function SignUpPage() {
+  const navigate = useNavigate()
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    navigate('/dashboard') // Dummy redirect — no real auth in Phase 3
+  }
+
   return (
     <div className="min-h-[calc(100vh-200px)] flex items-center justify-center bg-toolstoy-softgrey py-12 font-inter">
       <div className="bg-white rounded-lg p-8 md:p-12 w-[92vw] md:w-[440px] shadow-toolstoy">
@@ -24,7 +31,7 @@ export function SignUpPage() {
           Your products&apos; first words are about to happen.
         </p>
 
-        <form className="mt-8" onSubmit={(e) => e.preventDefault()}>
+        <form className="mt-8" onSubmit={handleSubmit}>
           <div>
             <label className="block font-medium text-[13px] text-toolstoy-nearblack mb-1.5">
               Full Name
