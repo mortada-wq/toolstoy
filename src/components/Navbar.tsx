@@ -18,7 +18,7 @@ export function Navbar() {
         <img
           src={logoSrc}
           alt="toolstoy"
-          className="h-8 sm:h-9 w-auto object-contain"
+          className="h-[1.6rem] sm:h-[1.8rem] w-auto object-contain"
           style={{ color: 'rgba(105, 105, 105, 1)', opacity: 0.73 }}
         />
       </a>
