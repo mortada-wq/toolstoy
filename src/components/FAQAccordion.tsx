@@ -10,7 +10,16 @@ interface FAQAccordionProps {
 }
 
 export function FAQAccordion({ items }: FAQAccordionProps) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [openIndices, setOpenIndices] = useState<Set<number>>(new Set())
+
+  const toggle = (index: number) => {
+    setOpenIndices((prev) => {
+      const next = new Set(prev)
+      if (next.has(index)) next.delete(index)
+      else next.add(index)
+      return next
+    })
+  }
 
   return (
     <div className="space-y-3">
@@ -18,14 +27,14 @@ export function FAQAccordion({ items }: FAQAccordionProps) {
         <div
           key={index}
           className="bg-white rounded-lg p-6 cursor-pointer transition-all duration-200"
-          onClick={() => setOpenIndex(openIndex === index ? null : index)}
+          onClick={() => toggle(index)}
         >
           <div className="flex items-center justify-between gap-4">
             <span className="font-semibold text-base text-toolstoy-nearblack">
               {item.question}
             </span>
             <span className="text-toolstoy-charcoal flex-shrink-0">
-              {openIndex === index ? (
+              {openIndices.has(index) ? (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                 </svg>
@@ -36,14 +45,14 @@ export function FAQAccordion({ items }: FAQAccordionProps) {
               )}
             </span>
           </div>
-          {openIndex === index && (
-            <div
-              className="mt-3 pt-3 border-t border-gray-100 text-[15px] text-toolstoy-muted leading-relaxed"
-              onClick={(e) => e.stopPropagation()}
-            >
+          <div
+            className={`overflow-hidden transition-all duration-200 ease-in-out ${openIndices.has(index) ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mt-3 pt-3 border-t border-[#E5E7EB] text-[15px] text-[#6B7280] leading-relaxed">
               {item.answer}
             </div>
-          )}
+          </div>
         </div>
       ))}
     </div>

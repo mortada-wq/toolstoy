@@ -34,6 +34,12 @@ export default {
         'toolstoy-hover': '0 8px 32px rgba(0,0,0,0.2)',
         'button-glow': '0 0 15px rgba(255,255,255,0.1)',
       },
+      transitionDelay: {
+        '80': '80ms',
+        '160': '160ms',
+        '240': '240ms',
+        '320': '320ms',
+      },
     },
   },
   plugins: [],

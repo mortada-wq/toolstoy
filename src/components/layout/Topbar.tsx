@@ -11,7 +11,7 @@ export function Topbar({ title, onMenuClick }: TopbarProps) {
       <div className="flex items-center gap-4">
         <button
           onClick={onMenuClick}
-          className="md:hidden w-10 h-10 flex items-center justify-center text-[#1A1A1A]"
+          className="md:hidden min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center text-[#1A1A1A] transition-all duration-200"
           aria-label="Toggle menu"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

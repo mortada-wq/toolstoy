@@ -75,7 +75,7 @@ export function PricingPage() {
 
             {/* Pro - Featured */}
             <div className="bg-toolstoy-charcoal rounded-lg p-9 md:scale-[1.04] md:z-10 relative">
-              <span className="inline-block bg-white text-toolstoy-charcoal font-semibold text-[11px] px-3 py-1 rounded-full mb-4">
+              <span className="inline-block bg-white text-[#282C34] font-semibold text-[14px] px-3 py-1 rounded-full mb-4">
                 Most Popular
               </span>
               <p className="font-semibold text-sm text-toolstoy-muted uppercase tracking-widest mb-3">
@@ -94,7 +94,7 @@ export function PricingPage() {
               </div>
               <Link
                 to="/signup"
-                className="block mt-7 w-full bg-white text-toolstoy-nearblack font-semibold text-[15px] py-3.5 rounded-lg text-center transition-all duration-200 hover:bg-gray-100"
+                className="block mt-7 w-full bg-white text-[#1A1A1A] font-semibold text-[15px] py-3.5 rounded-lg text-center transition-all duration-200 hover:bg-[#F5F5F5]"
               >
                 Start Pro Trial
               </Link>

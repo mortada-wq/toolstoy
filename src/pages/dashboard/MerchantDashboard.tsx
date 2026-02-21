@@ -1,17 +1,6 @@
 import { Link } from 'react-router-dom'
-
-const STATS = [
-  { label: 'Active Characters', value: '3', change: '↑ 1 this month', positive: true },
-  { label: 'Conversations', value: '1,284', change: '↑ 23% this week', positive: true },
-  { label: 'Response Quality', value: '8.4/10', change: '↑ 0.3 this week', positive: true },
-  { label: 'Knowledge Gaps', value: '7', change: 'Needs attention', positive: false },
-]
-
-const CHARACTERS = [
-  { name: 'Character Name', productType: 'Power Tool', status: 'live', conversations: 247, quality: '8.6/10', processing: false },
-  { name: 'Character Name', productType: 'Coffee Machine', status: 'live', conversations: 189, quality: '8.2/10', processing: false },
-  { name: 'Character Name', productType: 'Running Shoe', status: 'processing', processing: true },
-]
+import { useUser } from '@/context/UserContext'
+import { usePersonas } from '@/hooks/usePersonas'
 
 const ACTIVITY = [
   { icon: 'chat', text: 'A customer asked about product durability', time: '2 minutes ago' },
@@ -21,117 +10,159 @@ const ACTIVITY = [
   { icon: 'rocket', text: 'Widget installed on yourstore.com', time: 'Yesterday' },
 ]
 
+function SkeletonCard() {
+  return (
+    <div className="bg-white border border-[#E5E7EB] rounded-lg overflow-hidden">
+      <div className="h-40 bg-[#F5F5F5] animate-pulse" />
+      <div className="p-4 space-y-2">
+        <div className="h-4 w-3/4 bg-[#F5F5F5] rounded animate-pulse" />
+        <div className="h-3 w-1/2 bg-[#F5F5F5] rounded animate-pulse" />
+      </div>
+    </div>
+  )
+}
+
 export function MerchantDashboard() {
+  const { user } = useUser()
+  const { personas, isLoading, error } = usePersonas()
+  const liveCount = personas.filter((p) => p.status === 'live').length
+  const displayName = user?.name?.split(' ')[0] ?? 'there'
+
   return (
     <div className="p-5 md:p-8">
-      {/* Welcome */}
-      <h2 className="font-bold text-[28px] text-[#1A1A1A]">Good morning, Leo.</h2>
+      <h2 className="font-bold text-[28px] text-[#1A1A1A]">
+        Good morning, {displayName}.
+      </h2>
       <p className="mt-1 text-[15px] text-[#6B7280] font-normal">
         Here&apos;s what your characters have been up to.
       </p>
 
-      {/* Stat cards */}
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {STATS.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-white border border-[#E5E7EB] rounded-lg p-6 transition-all duration-200 hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
-          >
-            <p className="font-medium text-xs text-[#6B7280] uppercase tracking-wider">{stat.label}</p>
-            <p
-              className={`mt-2 font-bold text-[36px] ${
-                stat.label === 'Knowledge Gaps' ? 'text-[#EF4444]' : 'text-[#1A1A1A]'
-              }`}
-            >
-              {stat.value}
-            </p>
-            <p
-              className={`mt-1.5 text-[13px] ${
-                stat.positive ? 'text-[#22C55E]' : 'text-[#EF4444]'
-              }`}
-            >
-              {stat.change}
-            </p>
-          </div>
-        ))}
+        <div className="bg-white border border-[#E5E7EB] rounded-lg p-6 transition-all duration-200 hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+          <p className="font-medium text-xs text-[#6B7280] uppercase tracking-wider">Active Characters</p>
+          <p className="mt-2 font-bold text-[36px] text-[#1A1A1A]">{isLoading ? '–' : liveCount}</p>
+          <p className="mt-1.5 text-[13px] text-[#22C55E]">Live on your site</p>
+        </div>
+        <div className="bg-white border border-[#E5E7EB] rounded-lg p-6 transition-all duration-200 hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+          <p className="font-medium text-xs text-[#6B7280] uppercase tracking-wider">Conversations</p>
+          <p className="mt-2 font-bold text-[36px] text-[#1A1A1A]">0</p>
+          <p className="mt-1.5 text-[13px] text-[#6B7280]">Start chatting to see</p>
+        </div>
+        <div className="bg-white border border-[#E5E7EB] rounded-lg p-6 transition-all duration-200 hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+          <p className="font-medium text-xs text-[#6B7280] uppercase tracking-wider">Response Quality</p>
+          <p className="mt-2 font-bold text-[36px] text-[#1A1A1A]">–</p>
+          <p className="mt-1.5 text-[13px] text-[#6B7280]">Based on conversations</p>
+        </div>
+        <div className="bg-white border border-[#E5E7EB] rounded-lg p-6 transition-all duration-200 hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+          <p className="font-medium text-xs text-[#6B7280] uppercase tracking-wider">Knowledge Gaps</p>
+          <p className="mt-2 font-bold text-[36px] text-[#EF4444]">0</p>
+          <p className="mt-1.5 text-[13px] text-[#6B7280]">None yet</p>
+        </div>
       </div>
 
-      {/* My Characters */}
       <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <h3 className="font-semibold text-[17px] text-[#1A1A1A]">My Characters</h3>
-        <Link
-          to="/dashboard/characters"
-          className="text-[14px] text-[#6B7280] font-normal hover:text-[#1A1A1A]"
-        >
+        <Link to="/dashboard/characters" className="text-[14px] text-[#6B7280] font-normal hover:text-[#1A1A1A] transition-all duration-200">
           View All →
         </Link>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {CHARACTERS.map((char) => (
-          <div
-            key={char.productType}
-            className="bg-white border border-[#E5E7EB] rounded-lg overflow-hidden transition-all duration-200 hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] group"
-          >
-            <div className="relative h-40 bg-[#1A1A1A] flex items-center justify-center">
-              {char.processing && (
-                <div className="absolute inset-0 animate-pulse bg-[#1A1A1A]/80" />
-              )}
-              <span className="text-[13px] text-[#6B7280] font-normal">[ Character ]</span>
-              <span
-                className={`absolute top-2.5 left-2.5 font-medium text-[11px] px-2.5 py-1 rounded-full ${
-                  char.status === 'live'
-                    ? 'bg-[rgba(34,197,94,0.15)] text-[#22C55E]'
-                    : 'bg-[rgba(245,158,11,0.15)] text-[#D97706]'
-                }`}
-              >
-                {char.status === 'live' ? '● Live' : '⟳ Processing'}
-              </span>
-            </div>
-            <div className="p-4">
-              <h4 className="font-semibold text-[15px] text-[#1A1A1A]">{char.name}</h4>
-              <p className="text-[13px] text-[#6B7280] font-normal">{char.productType}</p>
-              <div className="mt-2.5 flex gap-3 text-[12px] text-[#6B7280] font-normal">
-                {char.processing ? (
-                  <span>Generating your character...</span>
-                ) : (
-                  <>
-                    <span>{char.conversations} conversations</span>
-                    <span>·</span>
-                    <span>{char.quality} quality</span>
-                  </>
-                )}
-              </div>
-              <div className="mt-3 flex items-center gap-3">
-                <Link
-                  to="/dashboard/studio"
-                  className="border border-[#E5E7EB] rounded-lg px-3.5 py-1.5 font-medium text-[13px] text-[#1A1A1A] hover:bg-[#F5F5F5]"
-                >
-                  Edit
-                </Link>
-                <a href="#" className="text-[13px] text-[#6B7280] font-medium hover:text-[#1A1A1A]">
-                  View Widget
-                </a>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      {error && (
+        <p className="mt-4 text-[13px] text-[#EF4444]">
+          Couldn&apos;t load your data. Try refreshing.
+        </p>
+      )}
 
-      {/* Recent Activity */}
+      {isLoading ? (
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {personas.slice(0, 3).map((char) => (
+            <div
+              key={char.id}
+              className="bg-white border border-[#E5E7EB] rounded-lg overflow-hidden transition-all duration-200 hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
+            >
+              <div className="relative h-40 bg-[#1A1A1A] flex items-center justify-center">
+                {char.status === 'processing' && (
+                  <div className="absolute inset-0 animate-pulse bg-[#1A1A1A]/80" />
+                )}
+                {char.imageUrl ? (
+                  <img src={char.imageUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-[13px] text-[#6B7280] font-normal">[ Character ]</span>
+                )}
+                <span
+                  className={`absolute top-2.5 left-2.5 font-medium text-[11px] px-2.5 py-1 rounded-full ${
+                    char.status === 'live'
+                      ? 'bg-[rgba(34,197,94,0.15)] text-[#22C55E]'
+                      : char.status === 'processing'
+                      ? 'bg-[rgba(245,158,11,0.15)] text-[#D97706]'
+                      : 'bg-[#F5F5F5] text-[#6B7280]'
+                  }`}
+                >
+                  {char.status === 'live' ? 'Live' : char.status === 'processing' ? 'Processing' : 'Draft'}
+                </span>
+              </div>
+              <div className="p-4">
+                <h4 className="font-semibold text-[15px] text-[#1A1A1A]">{char.name ?? 'Character'}</h4>
+                <p className="text-[13px] text-[#6B7280] font-normal">{char.productName ?? '—'}</p>
+                <div className="mt-2.5 flex gap-3 text-[12px] text-[#6B7280] font-normal">
+                  {char.status === 'processing' ? (
+                    <span>Generating your character...</span>
+                  ) : char.status !== 'draft' ? (
+                    <>
+                      <span>0 conversations</span>
+                      <span>·</span>
+                      <span>— quality</span>
+                    </>
+                  ) : null}
+                </div>
+                <div className="mt-3 flex items-center gap-3 flex-wrap">
+                  <Link
+                    to={`/dashboard/characters/${char.id}/edit`}
+                    className="border border-[#1A1A1A] bg-white text-[#1A1A1A] rounded-lg px-3.5 py-1.5 font-medium text-[14px] min-h-[44px] flex items-center transition-all duration-200 hover:bg-[#F5F5F5]"
+                  >
+                    Edit
+                  </Link>
+                  <Link
+                    to="/dashboard/widget"
+                    className="text-[14px] text-[#6B7280] font-medium hover:text-[#1A1A1A] transition-all duration-200"
+                  >
+                    View Widget
+                  </Link>
+                  <Link
+                    to="/dashboard/widget"
+                    className="text-[14px] text-[#6B7280] font-medium hover:text-[#1A1A1A] transition-all duration-200"
+                  >
+                    Get Embed Code
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
+          {personas.length === 0 && !error && (
+            <div className="col-span-full text-center py-12 text-[#6B7280]">
+              No characters yet. <Link to="/dashboard/studio" className="text-[#1A1A1A] underline">Create your first</Link>.
+            </div>
+          )}
+        </div>
+      )}
+
       <h3 className="mt-8 font-semibold text-[17px] text-[#1A1A1A]">Recent Activity</h3>
       <div className="mt-4 bg-white border border-[#E5E7EB] rounded-lg overflow-hidden">
         {ACTIVITY.map((item, i) => (
           <div
             key={i}
-            className={`flex items-center gap-3 px-5 py-3.5 ${
-              i < ACTIVITY.length - 1 ? 'border-b border-[#F5F5F5]' : ''
-            }`}
+            className={`flex items-center gap-3 px-5 py-3.5 ${i < ACTIVITY.length - 1 ? 'border-b border-[#F5F5F5]' : ''}`}
           >
             <div className="w-[34px] h-[34px] rounded-full bg-[#F5F5F5] flex items-center justify-center text-[#1A1A1A] shrink-0">
               {item.icon === 'chat' && (
                 <svg className="w-[15px] h-[15px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               )}
               {item.icon === 'sparkle' && (
@@ -158,15 +189,17 @@ export function MerchantDashboard() {
         ))}
       </div>
 
-      {/* Knowledge Gaps Alert */}
       <div className="mt-6 bg-white border border-[#E5E7EB] border-l-[3px] border-l-[#F59E0B] rounded-lg p-5 md:px-6">
-        <h4 className="font-semibold text-[15px] text-[#1A1A1A]">7 Knowledge Gaps Detected</h4>
+        <h4 className="font-semibold text-[15px] text-[#1A1A1A]">Knowledge Gaps</h4>
         <p className="mt-1.5 text-[14px] text-[#6B7280] font-normal">
-          Your characters received questions they couldn&apos;t answer well. Review AI-suggested responses.
+          When your character gets stuck, suggested answers appear here.
         </p>
-        <button className="mt-3 border-[1.5px] border-[#1A1A1A] bg-white text-[#1A1A1A] font-semibold text-[13px] px-4 py-2 rounded-lg hover:bg-[#FAFAFA]">
+        <Link
+          to="/dashboard/analytics"
+          className="mt-3 inline-block border-[1.5px] border-[#1A1A1A] bg-white text-[#1A1A1A] font-semibold text-[13px] px-4 py-2 rounded-lg hover:bg-[#FAFAFA]"
+        >
           Review Suggestions
-        </button>
+        </Link>
       </div>
     </div>
   )

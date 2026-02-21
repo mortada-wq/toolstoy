@@ -8,12 +8,32 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
   background-color: #FFFFFF;
   min-height: 100vh;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile QA: 16px min on inputs prevents iOS auto-zoom on focus */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
+/* Touch-friendly: ensure tappable elements have adequate padding on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  button:not(.compact),
+  [role="button"]:not(.compact),
+  .btn-touch {
+    min-height: 44px;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
 }

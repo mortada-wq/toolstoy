@@ -21,42 +21,42 @@ function ChatPanel() {
   return (
     <div className="bg-white flex flex-col h-full min-h-0 flex-1">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-[#F0F0F0] flex items-center gap-2">
+      <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center gap-2">
         <h3 className="font-semibold text-[15px] text-toolstoy-nearblack">Character Name</h3>
         <span className="w-2 h-2 rounded-full bg-[#22C55E] flex-shrink-0" />
-        <span className="text-toolstoy-muted text-xs">Online</span>
+        <span className="text-[#6B7280] text-sm">Online</span>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-5 space-y-4">
         <div className="flex justify-end">
-          <div className="bg-toolstoy-nearblack text-white text-sm font-normal max-w-[80%] rounded-tl-xl rounded-tr-xl rounded-br-md rounded-bl-xl px-4 py-3">
+          <div className="bg-[#282C34] text-white text-sm font-normal max-w-[80%] rounded-tl-[12px] rounded-tr-[12px] rounded-br-[2px] rounded-bl-[12px] px-4 py-3">
             What makes this product special?
           </div>
         </div>
         <div className="flex justify-start">
-          <div className="bg-gray-100 text-toolstoy-nearblack text-sm font-normal max-w-[80%] rounded-tl-md rounded-tr-xl rounded-br-xl rounded-bl-xl px-4 py-3">
+          <div className="bg-[#F5F5F5] text-[#1A1A1A] text-sm font-normal max-w-[80%] rounded-tl-[12px] rounded-tr-[12px] rounded-br-[12px] rounded-bl-[2px] px-4 py-3">
             Great question. Let me walk you through what makes this one genuinely different...
           </div>
         </div>
         <div className="flex justify-end">
-          <div className="bg-toolstoy-nearblack text-white text-sm font-normal max-w-[80%] rounded-tl-xl rounded-tr-xl rounded-br-md rounded-bl-xl px-4 py-3">
+          <div className="bg-[#282C34] text-white text-sm font-normal max-w-[80%] rounded-tl-[12px] rounded-tr-[12px] rounded-br-[2px] rounded-bl-[12px] px-4 py-3">
             Can I see the full specs?
           </div>
         </div>
       </div>
 
       {/* Input bar */}
-      <div className="p-4 border-t border-[#F0F0F0] flex gap-2">
+      <div className="p-4 border-t border-[#E5E7EB] flex gap-2">
         <input
           type="text"
           placeholder="Ask anything..."
           readOnly
-          className="flex-1 border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-toolstoy-nearblack"
+          className="flex-1 border border-[#E5E7EB] rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#1A1A1A]"
         />
         <button
           type="button"
-          className="bg-toolstoy-nearblack text-white rounded-lg px-4 py-2.5 text-sm font-medium flex-shrink-0"
+          className="bg-[#1A1A1A] text-white rounded-lg px-4 py-2.5 text-sm font-medium flex-shrink-0 transition-all duration-200"
         >
           Send
         </button>
@@ -67,9 +67,9 @@ function ChatPanel() {
 
 function CharacterPanel() {
   return (
-    <div className="bg-gray-100 flex flex-col items-center justify-center p-6 min-h-0">
-      <span className="text-toolstoy-muted text-sm">[ Character Preview ]</span>
-      <h3 className="text-toolstoy-nearblack font-semibold text-[17px] mt-2">Character Name</h3>
+    <div className="bg-[#F5F5F5] flex flex-col items-center justify-center p-6 min-h-0">
+      <span className="text-[#6B7280] text-sm">[ Character Preview ]</span>
+      <h3 className="text-[#1A1A1A] font-semibold text-[17px] mt-2">Character Name</h3>
       <p className="text-toolstoy-muted text-[13px]">Product Type</p>
     </div>
   )
@@ -159,22 +159,22 @@ export function DemoModal({ layout, onClose }: DemoModalProps) {
                 <div className="h-full flex flex-col">
                   <div className="flex-1 overflow-y-auto p-5">
                     <div className="flex justify-end mb-4">
-                      <div className="bg-toolstoy-nearblack text-white text-sm max-w-[80%] rounded-tl-xl rounded-tr-xl rounded-br-md rounded-bl-xl px-4 py-3">
+                      <div className="bg-[#282C34] text-white text-sm max-w-[80%] rounded-tl-[12px] rounded-tr-[12px] rounded-br-[2px] rounded-bl-[12px] px-4 py-3">
                         What makes this product special?
                       </div>
                     </div>
                     <div className="flex justify-start mb-4">
-                      <div className="bg-gray-100 text-toolstoy-nearblack text-sm max-w-[80%] rounded-tl-md rounded-tr-xl rounded-br-xl rounded-bl-xl px-4 py-3">
+                      <div className="bg-[#F5F5F5] text-[#1A1A1A] text-sm max-w-[80%] rounded-tl-[12px] rounded-tr-[12px] rounded-br-[12px] rounded-bl-[2px] px-4 py-3">
                         Great question. Let me walk you through...
                       </div>
                     </div>
                     <div className="flex justify-end">
-                      <div className="bg-toolstoy-charcoal text-white text-sm max-w-[80%] rounded-tl-xl rounded-tr-xl rounded-br-md rounded-bl-xl px-4 py-3">
+                      <div className="bg-[#282C34] text-white text-sm max-w-[80%] rounded-tl-[12px] rounded-tr-[12px] rounded-br-[2px] rounded-bl-[12px] px-4 py-3">
                         Can I see the full specs?
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 border-t border-[#F0F0F0] flex gap-2 flex-shrink-0">
+                  <div className="p-4 border-t border-[#E5E7EB] flex gap-2 flex-shrink-0">
                     <input
                       type="text"
                       placeholder="Ask anything..."
@@ -217,7 +217,7 @@ export function DemoModal({ layout, onClose }: DemoModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-5"
+      className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-5"
       onClick={onClose}
     >
       {/* Backdrop */}
@@ -226,7 +226,7 @@ export function DemoModal({ layout, onClose }: DemoModalProps) {
       {/* Close button - fixed viewport position */}
       <button
         onClick={onClose}
-        className="fixed top-5 right-5 z-[60] w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-white hover:bg-white/10 rounded-lg transition-colors"
+        className="fixed top-5 right-5 z-[60] w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-white hover:bg-white/10 rounded-lg transition-all duration-200"
         aria-label="Close"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,7 +235,7 @@ export function DemoModal({ layout, onClose }: DemoModalProps) {
       </button>
 
       <div
-        className="relative bg-white w-full h-full sm:w-[92vw] sm:max-w-[960px] sm:max-h-[85vh] sm:rounded-xl overflow-hidden flex flex-col shadow-2xl border border-gray-200"
+        className="relative bg-white w-full h-full md:w-[92vw] md:max-w-[960px] md:max-h-[85vh] rounded-none md:rounded-lg overflow-hidden flex flex-col shadow-2xl border border-[#E5E7EB]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Content */}

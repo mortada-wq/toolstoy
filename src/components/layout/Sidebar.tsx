@@ -1,5 +1,7 @@
 import React from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useUser } from '@/context/UserContext'
+import { useMerchant } from '@/hooks/useMerchant'
 import logoSrc from '@/assets/Finaltoolstoy.svg'
 
 interface SidebarProps {
@@ -9,20 +11,21 @@ interface SidebarProps {
 }
 
 const MERCHANT_LINKS = [
-  { label: 'Dashboard', href: '/dashboard', icon: 'home' },
-  { label: 'Create Character', href: '/dashboard/studio', icon: 'sparkle' },
-  { label: 'My Characters', href: '/dashboard/characters', icon: 'characters' },
-  { label: 'Widget Settings', href: '/dashboard/widget', icon: 'widget' },
-  { label: 'Analytics', href: '/dashboard/analytics', icon: 'chart', comingSoon: true },
-  { label: 'Settings', href: '/dashboard/settings', icon: 'settings', comingSoon: true },
+  { label: 'Dashboard', href: '/dashboard', icon: 'home', comingSoon: false },
+  { label: 'Create Character', href: '/dashboard/studio', icon: 'sparkle', comingSoon: false },
+  { label: 'My Characters', href: '/dashboard/characters', icon: 'characters', comingSoon: false },
+  { label: 'Widget Settings', href: '/dashboard/widget', icon: 'widget', comingSoon: false },
+  { label: 'Analytics', href: '/dashboard/analytics', icon: 'chart', comingSoon: false },
+  { label: 'Billing', href: '/dashboard/billing', icon: 'billing', comingSoon: false },
+  { label: 'Settings', href: '/dashboard/settings', icon: 'settings', comingSoon: false },
 ]
 
 const ADMIN_LINKS = [
-  { label: 'Overview', href: '/admin', icon: 'chart' },
-  { label: 'Quality Lab', href: '/admin/quality', icon: 'lab' },
-  { label: 'Pipeline', href: '/admin/pipeline', icon: 'pipeline' },
-  { label: 'Merchants', href: '/admin/merchants', icon: 'store' },
-  { label: 'Alerts', href: '/admin/alerts', icon: 'alert' },
+  { label: 'Overview', href: '/admin', icon: 'chart', comingSoon: false },
+  { label: 'Quality Lab', href: '/admin/quality', icon: 'lab', comingSoon: false },
+  { label: 'Pipeline', href: '/admin/pipeline', icon: 'pipeline', comingSoon: false },
+  { label: 'Merchants', href: '/admin/merchants', icon: 'store', comingSoon: false },
+  { label: 'Alerts', href: '/admin/alerts', icon: 'alert', comingSoon: false },
 ]
 
 function Icon({ name }: { name: string }) {
@@ -78,13 +81,26 @@ function Icon({ name }: { name: string }) {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
       </svg>
     ),
+    billing: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+    ),
   }
   return icons[name] ?? null
 }
 
 export function Sidebar({ mobileOpen, onClose, isAdmin }: SidebarProps) {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, signOut } = useUser()
+  const { merchant } = useMerchant()
   const links = isAdmin ? ADMIN_LINKS : MERCHANT_LINKS
+
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/signin', { replace: true })
+  }
 
   return (
     <>
@@ -102,12 +118,11 @@ export function Sidebar({ mobileOpen, onClose, isAdmin }: SidebarProps) {
         }`}
       >
         {/* Logo */}
-        <Link to={isAdmin ? '/admin' : '/dashboard'} className="p-5" onClick={() => onClose()}>
+        <Link to={isAdmin ? '/admin' : '/dashboard'} className="px-5 py-6" onClick={() => onClose()}>
           <img
             src={logoSrc}
             alt="toolstoy"
-            className="h-6 w-auto object-contain"
-            style={{ filter: 'contrast(0) brightness(0)' }}
+            className="h-6 w-auto object-contain brightness-0"
           />
         </Link>
         <div className="h-px bg-[#E5E7EB]" />
@@ -121,47 +136,50 @@ export function Sidebar({ mobileOpen, onClose, isAdmin }: SidebarProps) {
                 key={link.href}
                 to={link.href}
                 onClick={() => onClose()}
-                className={`flex items-center h-11 px-4 gap-2.5 mx-2 rounded-md transition-all duration-150 ${
+                className={`flex items-center h-11 px-4 gap-2.5 mx-2 rounded-lg transition-all duration-200 ${
                   isActive
                     ? 'text-[#1A1A1A] bg-[#F5F5F5]'
-                    : 'text-[#6B7280] hover:text-[#1A1A1A] hover:bg-[#F9F9F9]'
+                    : 'text-[#6B7280] hover:text-[#1A1A1A] hover:bg-[#F5F5F5]'
                 }`}
               >
                 <Icon name={link.icon} />
                 <span className="font-medium text-sm">{link.label}</span>
-                {('comingSoon' in link && link.comingSoon) ? (
-                  <span className="ml-auto bg-[#F5F5F5] text-[#6B7280] font-medium text-[10px] px-2 py-0.5 rounded-full">
+                {link.comingSoon && (
+                  <span className="ml-auto bg-[#F5F5F5] text-[#6B7280] font-medium text-[14px] px-2 py-0.5 rounded-[20px]">
                     Coming Soon
                   </span>
-                ) : null}
+                )}
               </Link>
             )
           })}
         </nav>
 
-        {/* User section - merchant only */}
-        {!isAdmin && (
+        {/* User section */}
+        {user && (
           <>
             <div className="h-px bg-[#E5E7EB]" />
             <div className="p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white font-semibold text-xs">
-                  LT
+              <div className="flex flex-col items-start gap-2 mb-3">
+                <div className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white font-semibold text-xs shrink-0">
+                  {(user.name ?? user.email ?? 'U').slice(0, 2).toUpperCase()}
                 </div>
-                <div>
-                  <p className="font-medium text-[13px] text-[#1A1A1A]">Leo Tolstoy</p>
-                  <span className="bg-[#F5F5F5] text-[#6B7280] font-medium text-[11px] px-2 py-0.5 rounded-full">
-                    Pro
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-medium text-[14px] text-[#1A1A1A]">{user.name ?? user.email}</p>
+                  <span className="bg-[#F5F5F5] text-[#6B7280] font-medium text-[14px] px-2 py-0.5 rounded-full">
+                    {isAdmin ? 'Admin' : (merchant?.plan ? merchant.plan.charAt(0).toUpperCase() + merchant.plan.slice(1) : 'Free')}
                   </span>
                 </div>
               </div>
-              <Link
-                to="/"
+              <button
+                type="button"
                 className="text-[13px] text-[#6B7280] hover:text-[#1A1A1A] transition-colors"
-                onClick={() => onClose()}
+                onClick={() => {
+                  onClose()
+                  void handleSignOut()
+                }}
               >
                 Sign Out
-              </Link>
+              </button>
             </div>
           </>
         )}

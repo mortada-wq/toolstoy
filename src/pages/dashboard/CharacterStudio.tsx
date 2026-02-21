@@ -1,6 +1,40 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
+function ExpertIcon() {
+  return (
+    <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+    </svg>
+  )
+}
+function EntertainerIcon() {
+  return (
+    <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+      <line x1="9" y1="9" x2="9.01" y2="9" />
+      <line x1="15" y1="9" x2="15.01" y2="9" />
+    </svg>
+  )
+}
+function AdvisorIcon() {
+  return (
+    <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M18 11v6a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-6" />
+      <path d="M14 10V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v4" />
+      <path d="M22 10v4a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-4" />
+    </svg>
+  )
+}
+function EnthusiastIcon() {
+  return (
+    <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+    </svg>
+  )
+}
+
 const STEPS = [
   { num: 1, label: 'Product' },
   { num: 2, label: 'Character' },
@@ -11,22 +45,22 @@ const STEPS = [
 
 const CHARACTER_TYPES = [
   {
-    icon: '🔧',
+    icon: <ExpertIcon />,
     title: 'The Expert',
     description: 'Deep product knowledge. Confident. Answers every question with authority.',
   },
   {
-    icon: '😄',
+    icon: <EntertainerIcon />,
     title: 'The Entertainer',
     description: 'Personality-first. Makes shopping fun. Customers remember the chat.',
   },
   {
-    icon: '🤝',
+    icon: <AdvisorIcon />,
     title: 'The Advisor',
     description: 'Consultative. Asks questions back. Helps customers find the right choice.',
   },
   {
-    icon: '⚡',
+    icon: <EnthusiastIcon />,
     title: 'The Enthusiast',
     description: 'Pure energy. Obsessed with the product. Celebrates every interaction.',
   },
@@ -61,7 +95,7 @@ export function CharacterStudio() {
 
   const handleGenerate = () => {
     setGenerating(true)
-    setProgressStep(0)
+    setProgressStep(1) // Step 1 (soul) complete, Step 2 (knowledge) in progress
     const interval = setInterval(() => {
       setProgressStep((p) => {
         if (p >= 3) {
@@ -179,7 +213,7 @@ export function CharacterStudio() {
                   onClick={() => setStep(2)}
                   className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg hover:opacity-90"
                 >
-                  Next: Build the Character →
+                  Next: Build the Character
                 </button>
               </div>
             </div>
@@ -206,7 +240,7 @@ export function CharacterStudio() {
                         : 'border border-[#E5E7EB] bg-white hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)]'
                     }`}
                   >
-                    <span className="text-2xl">{t.icon}</span>
+                    <span className="text-[#1A1A1A]">{t.icon}</span>
                     <h3 className="mt-2.5 font-semibold text-[15px] text-[#1A1A1A]">{t.title}</h3>
                     <p className="mt-1.5 text-[13px] text-[#6B7280]">{t.description}</p>
                   </button>
@@ -234,13 +268,13 @@ export function CharacterStudio() {
 
               <div className="mt-8 flex justify-between">
                 <button onClick={() => setStep(1)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">
-                  ← Back
+                  Back
                 </button>
                 <button
                   onClick={() => setStep(3)}
                   className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg"
                 >
-                  Next: Personality →
+                  Next: Personality
                 </button>
               </div>
             </div>
@@ -314,13 +348,13 @@ export function CharacterStudio() {
 
               <div className="mt-8 flex justify-between">
                 <button onClick={() => setStep(2)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">
-                  ← Back
+                  Back
                 </button>
                 <button
                   onClick={() => setStep(4)}
                   className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg"
                 >
-                  Next: Knowledge Base →
+                  Next: Knowledge Base
                 </button>
               </div>
             </div>
@@ -387,13 +421,13 @@ export function CharacterStudio() {
 
               <div className="mt-8 flex justify-between">
                 <button onClick={() => setStep(3)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">
-                  ← Back
+                  Back
                 </button>
                 <button
                   onClick={() => setStep(5)}
                   className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg"
                 >
-                  Next: Launch →
+                  Next: Launch
                 </button>
               </div>
             </div>
@@ -457,10 +491,10 @@ export function CharacterStudio() {
 
                   <div className="mt-5 space-y-3">
                     {[
-                      { label: 'Extracting character soul...', done: progressStep >= 1, active: progressStep === 0 },
-                      { label: 'Building knowledge base...', done: progressStep >= 2, active: progressStep === 1 },
-                      { label: 'Generating character image...', done: progressStep >= 3, active: progressStep === 2 },
-                      { label: 'Creating animations...', done: progressStep >= 4, active: progressStep === 3 },
+                      { label: 'Soul extraction', done: progressStep >= 1, active: progressStep === 0 },
+                      { label: 'Knowledge base', done: progressStep >= 2, active: progressStep === 1 },
+                      { label: 'Image generation', done: progressStep >= 3, active: progressStep === 2 },
+                      { label: 'Creating animations', done: progressStep >= 4, active: progressStep === 3 },
                     ].map((item) => (
                       <div key={item.label} className="flex items-center gap-3">
                         {item.done ? (
@@ -488,7 +522,7 @@ export function CharacterStudio() {
                       to="/dashboard"
                       className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]"
                     >
-                      ← Back to Dashboard
+                      Back to Dashboard
                     </Link>
                   </div>
                 </>

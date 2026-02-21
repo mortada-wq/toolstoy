@@ -1,4 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { CheckIcon, ChevronRightIcon } from '@/components/icons'
+import { usePersonas } from '@/hooks/usePersonas'
+import outputs from '../../../amplify_outputs.json'
+
+const API_BASE = (outputs as { custom?: { API?: Record<string, { endpoint?: string }> } }).custom?.API?.ToolstoyApi?.endpoint?.replace(/\/$/, '') ?? ''
 
 const LAYOUTS = [
   'Side by Side',
@@ -18,22 +24,41 @@ const TRIGGERS = [
   { id: 'click', label: 'Wait for customer to click' },
 ]
 
-const PLATFORMS = ['Wix', 'Squarespace', 'WordPress', 'Webflow', 'Custom HTML']
+const PLATFORMS: { name: string; slug: string }[] = [
+  { name: 'Wix', slug: 'wix' },
+  { name: 'Squarespace', slug: 'squarespace' },
+  { name: 'WordPress', slug: 'wordpress' },
+  { name: 'Webflow', slug: 'webflow' },
+  { name: 'Custom HTML', slug: 'custom' },
+]
 
-const EMBED_CODE = `<script
+function buildEmbedCode(token: string, position: string, apiBase: string): string {
+  const api = apiBase ? ` data-api="${apiBase}"` : ''
+  return `<script
   src="https://cdn.toolstoy.app/widget.js"
-  data-persona="ts_xxxxxxxxxxxxxxxx"
-  data-position="bottom-right"
+  data-persona="${token}"
+  data-position="${position.toLowerCase().replace(/\s/g, '-')}"${api}
 ></script>`
+}
 
 export function WidgetSettings() {
+  const { personas, isLoading } = usePersonas()
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string>('')
   const [selectedLayout, setSelectedLayout] = useState('Side by Side')
   const [selectedPosition, setSelectedPosition] = useState('Bottom Right')
   const [selectedTrigger, setSelectedTrigger] = useState('delay')
   const [copied, setCopied] = useState(false)
 
+  useEffect(() => {
+    if (personas.length > 0 && !selectedPersonaId) setSelectedPersonaId(personas[0].id)
+  }, [personas, selectedPersonaId])
+
+  const selectedPersona = personas.find((p) => p.id === selectedPersonaId) ?? personas[0]
+  const embedToken = selectedPersona?.embedToken ?? 'ts_xxxxxxxxxxxxxxxx'
+  const embedCode = buildEmbedCode(embedToken, selectedPosition, API_BASE)
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(EMBED_CODE)
+    navigator.clipboard.writeText(embedCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -47,10 +72,22 @@ export function WidgetSettings() {
             <label className="block font-semibold text-[14px] text-[#1A1A1A] mb-2">
               Select Character
             </label>
-            <select className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] font-normal focus:border-[#1A1A1A] focus:outline-none">
-              <option>Character 1 — Power Tool</option>
-              <option>Character 2 — Coffee Machine</option>
-              <option>Character 3 — Running Shoe</option>
+            <select
+              value={selectedPersonaId}
+              onChange={(e) => setSelectedPersonaId(e.target.value)}
+              className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] font-normal focus:border-[#1A1A1A] focus:outline-none"
+            >
+              {isLoading ? (
+                <option>Loading...</option>
+              ) : personas.length === 0 ? (
+                <option>No characters yet</option>
+              ) : (
+                personas.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name ?? 'Character'} {p.productName ? `— ${p.productName}` : ''}
+                  </option>
+                ))
+              )}
             </select>
           </div>
 
@@ -128,28 +165,37 @@ export function WidgetSettings() {
             </p>
 
             <pre className="mt-4 p-5 bg-[#1A1A1A] rounded-lg text-[#22C55E] text-[13px] font-mono leading-relaxed overflow-x-auto">
-              {EMBED_CODE}
+              {embedCode}
             </pre>
 
             <button
               onClick={handleCopy}
-              className="mt-3 w-full border border-[#E5E7EB] bg-white text-[#1A1A1A] font-semibold text-[14px] py-2.5 rounded-lg hover:bg-[#F5F5F5] transition-all"
+              className="mt-3 w-full flex items-center justify-center gap-2 border border-[#E5E7EB] bg-white text-[#1A1A1A] font-semibold text-[14px] py-2.5 rounded-lg hover:bg-[#F5F5F5] transition-all"
             >
-              {copied ? 'Copied! ✓' : 'Copy Code'}
+              {copied ? (
+                <>
+                  <CheckIcon />
+                  Copied! ✓
+                </>
+              ) : (
+                'Copy Code'
+              )}
             </button>
 
             <div className="mt-6">
-              <p className="font-medium text-[11px] text-[#6B7280] uppercase tracking-widest mb-3">
-                Installation Guides
+              <p className="font-medium text-[14px] text-[#6B7280] uppercase tracking-widest mb-3">
+                INSTALLATION GUIDES
               </p>
               <div className="flex flex-wrap gap-2">
                 {PLATFORMS.map((p) => (
-                  <button
-                    key={p}
-                    className="bg-[#F5F5F5] text-[#6B7280] font-medium text-[12px] px-3.5 py-1.5 rounded-full hover:bg-[#E5E7EB] transition-all"
+                  <Link
+                    key={p.slug}
+                    to={`/docs/install/${p.slug}`}
+                    className="inline-flex items-center bg-[#F5F5F5] text-[#6B7280] font-medium text-[14px] px-3.5 py-1.5 rounded-[20px] hover:bg-[#E5E7EB] transition-all duration-200"
                   >
-                    → {p}
-                  </button>
+                    <ChevronRightIcon className="w-3.5 h-3.5 inline-block mr-1 align-middle" />
+                    {p.name}
+                  </Link>
                 ))}
               </div>
             </div>

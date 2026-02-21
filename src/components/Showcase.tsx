@@ -26,7 +26,7 @@ export function Showcase({ onCardClick }: ShowcaseProps) {
           Click any character to have a real conversation.
         </p>
 
-        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
           {CARDS.map((card, index) => (
             <ScrollReveal key={card.layoutName} delay={index * 80}>
               <ShowcaseCard

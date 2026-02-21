@@ -8,6 +8,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/studio': 'Character Studio',
   '/dashboard/characters': 'My Characters',
   '/dashboard/widget': 'Widget Settings',
+  '/dashboard/billing': 'Billing',
   '/dashboard/analytics': 'Analytics',
   '/dashboard/settings': 'Settings',
   '/admin': 'Overview',
@@ -18,6 +19,7 @@ const PAGE_TITLES: Record<string, string> = {
 }
 
 function getPageTitle(pathname: string): string {
+  if (pathname.match(/\/dashboard\/characters\/[^/]+\/edit/)) return 'Edit Character'
   return PAGE_TITLES[pathname] ?? (pathname.startsWith('/admin') ? 'Admin' : 'Dashboard')
 }
 

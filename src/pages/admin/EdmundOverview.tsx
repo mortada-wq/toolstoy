@@ -37,12 +37,6 @@ const ALERTS = [
   },
 ]
 
-const statusStyles: Record<string, string> = {
-  red: 'bg-[#FEE2E2] text-[#EF4444]',
-  amber: 'bg-[#FEF3C7] text-[#D97706]',
-  green: 'bg-[#DCFCE7] text-[#22C55E]',
-}
-
 export function EdmundOverview() {
   return (
     <div className="p-5 md:p-8">
@@ -90,18 +84,20 @@ export function EdmundOverview() {
                   <td className="py-4 px-5 text-[14px] text-[#1A1A1A] font-normal">{m.characters}</td>
                   <td className="py-4 px-5 text-[14px] text-[#1A1A1A] font-normal">{m.conversations}</td>
                   <td className="py-4 px-5 text-[14px] text-[#1A1A1A] font-normal">{m.fallback}%</td>
-                  <td className="py-4 px-5 text-[14px] text-[#1A1A1A] font-normal">{m.health}</td>
                   <td className="py-4 px-5">
                     <span
-                      className={`inline-block font-semibold text-[12px] px-2.5 py-0.5 rounded-full ${
-                        statusStyles[m.color]
+                      className={`inline-block font-semibold text-[12px] px-[10px] py-[3px] rounded ${
+                        m.health >= 80
+                          ? 'bg-[#DCFCE7] text-[#22C55E]'
+                          : m.health >= 50
+                          ? 'bg-[#FEF3C7] text-[#D97706]'
+                          : 'bg-[#FEE2E2] text-[#EF4444]'
                       }`}
                     >
-                      {m.status === 'At Risk' && '🔴'}
-                      {m.status === 'Watch' && '🟡'}
-                      {(m.status === 'Healthy' || m.status === 'Excellent') && '🟢'} {m.status}
+                      {m.health}
                     </span>
                   </td>
+                  <td className="py-4 px-5 text-[14px] text-[#1A1A1A] font-normal">{m.status}</td>
                 </tr>
               ))}
             </tbody>
@@ -121,8 +117,7 @@ export function EdmundOverview() {
         {ALERTS.map((alert, i) => (
           <div
             key={i}
-            className="bg-white border border-[#E5E7EB] rounded-lg p-4 md:px-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 border-l-[3px]"
-            style={{ borderLeftColor: alert.border }}
+            className={`bg-white border border-[#E5E7EB] rounded-lg p-4 md:px-5 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 border-l-[3px] ${alert.border === '#EF4444' ? 'border-l-[#EF4444]' : 'border-l-[#F59E0B]'}`}
           >
             <div>
               <h4 className="font-semibold text-[14px] text-[#1A1A1A]">{alert.type}</h4>

@@ -2,11 +2,11 @@
 
 B2B SaaS platform that transforms any e-commerce product into an animated AI character — a talking assistant that lives on any website as a two-line JavaScript embed.
 
-## Phase 1 — Static Homepage ✓
+## Phase 1 — Static Homepage (done)
 
 Frontend-only. No backend, auth, or database.
 
-## Phase 2 — Routing, Pages & Micro-Animations ✓
+## Phase 2 — Routing, Pages & Micro-Animations (done)
 
 - React Router v6 (/, /features, /pricing, /signin, /signup)
 - Scroll-triggered reveal animations (Intersection Observer)
@@ -14,7 +14,7 @@ Frontend-only. No backend, auth, or database.
 - Navbar links now navigate between pages
 - Still NO backend, auth, or API calls
 
-## Phase 3 — Merchant Dashboard & Character Studio ✓
+## Phase 3 — Merchant Dashboard & Character Studio (done)
 
 - Protected layout (dashboard shell — no real auth)
 - Merchant Dashboard: stats, character cards, activity, knowledge gaps alert
