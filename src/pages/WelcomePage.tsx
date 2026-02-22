@@ -40,7 +40,7 @@ export function WelcomePage() {
             <img
               src={logoSrc}
               alt="toolstoy"
-              className="h-7 w-auto"
+              className="h-[22.4px] w-auto"
               style={{ filter: 'contrast(0) brightness(0)' }}
             />
           </Link>

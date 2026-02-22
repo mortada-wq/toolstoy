@@ -18,7 +18,7 @@ export function CTASection() {
         <ScrollReveal delay={160}>
           <Link
             to="/signup"
-            className="inline-block mt-11 bg-white text-[#1A1A1A] font-medium text-[17px] px-10 py-4 rounded-lg w-full sm:w-auto transition-all duration-200 hover:bg-[#F5F5F5] min-h-[44px] flex items-center justify-center"
+            className="inline-block mt-11 w-fit px-10 py-3.5 bg-white text-[#1A1A1A] font-medium text-[17px] rounded-lg transition-all duration-200 hover:bg-[#F5F5F5] flex items-center justify-center"
           >
             Start Free — toolstoy.app
           </Link>

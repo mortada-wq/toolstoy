@@ -27,11 +27,11 @@ export function ScrollReveal({ children, delay = 0, className = '' }: ScrollReve
     return () => observer.disconnect()
   }, [visible])
 
-  const delayClass = delay <= 0 ? 'delay-0' : delay <= 80 ? 'delay-80' : delay <= 160 ? 'delay-160' : delay <= 240 ? 'delay-240' : 'delay-320'
   return (
     <div
       ref={ref}
-      className={`transition-all duration-500 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${visible ? delayClass : 'delay-0'} ${className}`}
+      className={`transition-all duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} ${className}`}
+      style={visible && delay > 0 ? { transitionDelay: `${delay}ms` } : undefined}
     >
       {children}
     </div>

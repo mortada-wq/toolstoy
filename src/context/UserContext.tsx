@@ -14,11 +14,15 @@ import {
   type AuthUser,
 } from 'aws-amplify/auth'
 
+export type AdminRole = 'super_admin' | 'admin' | 'assistant' | null
+
 export interface ToolstoyUser {
   userId: string
   email: string
   name: string
   storeUrl?: string
+  isAdmin: boolean
+  adminRole: AdminRole
 }
 
 interface UserContextValue {
@@ -26,8 +30,36 @@ interface UserContextValue {
   cognitoUser: AuthUser | null
   isLoading: boolean
   isAuthenticated: boolean
+  isAdmin: boolean
+  adminRole: AdminRole
   signOut: () => Promise<void>
   refreshUser: () => Promise<void>
+}
+
+// Admin roles configuration
+const SUPER_ADMINS = [
+  'mortadagzar@gmail.com',
+  'mortada@howvie.com',
+]
+
+const ADMINS: string[] = [
+  // Admins can access all admin features but cannot manage other admins
+]
+
+const ASSISTANTS: string[] = [
+  // Assistants have read-only access to admin dashboard
+]
+
+function getAdminRole(email: string): AdminRole {
+  const lowerEmail = email.toLowerCase()
+  if (SUPER_ADMINS.includes(lowerEmail)) return 'super_admin'
+  if (ADMINS.includes(lowerEmail)) return 'admin'
+  if (ASSISTANTS.includes(lowerEmail)) return 'assistant'
+  return null
+}
+
+function isAdminEmail(email: string): boolean {
+  return getAdminRole(email) !== null
 }
 
 const UserContext = createContext<UserContextValue | null>(null)
@@ -36,16 +68,20 @@ async function loadUser(): Promise<{ authUser: AuthUser; toolstoyUser: ToolstoyU
   try {
     const authUser = await getCurrentUser()
     const attrs = await fetchUserAttributes()
+    const email = attrs.email ?? authUser.username
     const displayName =
-      attrs.name ?? attrs['custom:name'] ?? attrs.email ?? authUser.username ?? 'User'
+      attrs.name ?? attrs['custom:name'] ?? email ?? 'User'
     const storeUrl = attrs['custom:store_url']
+    const adminRole = getAdminRole(email)
     return {
       authUser,
       toolstoyUser: {
         userId: authUser.userId,
-        email: attrs.email ?? authUser.username,
+        email,
         name: displayName,
         storeUrl: storeUrl || undefined,
+        isAdmin: adminRole !== null,
+        adminRole,
       },
     }
   } catch {
@@ -102,6 +138,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       cognitoUser,
       isLoading,
       isAuthenticated: !!user,
+      isAdmin: user?.isAdmin ?? false,
+      adminRole: user?.adminRole ?? null,
       signOut,
       refreshUser,
     }),

@@ -21,7 +21,7 @@ Frontend-only. No backend, auth, or database.
 - Character Studio: 5-step wizard (Product → Character → Personality → Knowledge → Launch)
 - My Characters: grid with filters, 3-dot menu
 - Widget Settings: embed code with functional Copy button
-- Edmund admin dashboard: health banner, merchant table, alerts
+- Toolstizer admin dashboard: health banner, merchant table, alerts
 - Sign In / Sign Up redirect to /dashboard (dummy)
 - Still NO backend, auth, or API calls
 

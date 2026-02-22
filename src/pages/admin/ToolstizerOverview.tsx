@@ -16,7 +16,7 @@ const MERCHANTS = [
 const ALERTS = [
   {
     type: 'Pipeline Stalled',
-    desc: 'Acme Tools — processing for 34 minutes.',
+    desc: 'Toolstizer flagged this. Pipeline stalled on [Character Name]. Investigate or retry.',
     time: 'Triggered 34 min ago',
     action: 'Investigate',
     border: '#EF4444',
@@ -37,13 +37,13 @@ const ALERTS = [
   },
 ]
 
-export function EdmundOverview() {
+export function ToolstizerOverview() {
   return (
     <div className="p-5 md:p-8">
       {/* Health banner */}
       <div className="bg-[#DCFCE7] border border-[#22C55E] rounded-lg px-6 py-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <span className="font-semibold text-[15px] text-[#166534]">🟢 All systems operational</span>
-        <span className="text-[13px] text-[#166534] font-normal">Last checked 2 minutes ago</span>
+        <span className="text-[13px] text-[#166534] font-normal">Toolstizer is watching. All systems operational.</span>
       </div>
 
       {/* Platform stat cards */}

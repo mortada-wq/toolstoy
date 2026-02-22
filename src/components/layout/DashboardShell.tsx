@@ -11,7 +11,9 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/billing': 'Billing',
   '/dashboard/analytics': 'Analytics',
   '/dashboard/settings': 'Settings',
-  '/admin': 'Overview',
+  '/admin': 'Toolstizer',
+  '/admin/playground': 'Bedrock Playground',
+  '/admin/templates': 'Prompt Templates',
   '/admin/quality': 'Quality Lab',
   '/admin/pipeline': 'Pipeline',
   '/admin/merchants': 'Merchants',
@@ -20,7 +22,7 @@ const PAGE_TITLES: Record<string, string> = {
 
 function getPageTitle(pathname: string): string {
   if (pathname.match(/\/dashboard\/characters\/[^/]+\/edit/)) return 'Edit Character'
-  return PAGE_TITLES[pathname] ?? (pathname.startsWith('/admin') ? 'Admin' : 'Dashboard')
+  return PAGE_TITLES[pathname] ?? (pathname.startsWith('/admin') ? 'Toolstizer' : 'Dashboard')
 }
 
 export function DashboardShell() {

@@ -9,7 +9,7 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
-  const { isAuthenticated, isLoading } = useUser()
+  const { isAuthenticated, isLoading, isAdmin } = useUser()
   const location = useLocation()
 
   if (isLoading) {
@@ -27,8 +27,8 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
     return <Navigate to="/signin" state={{ from: location }} replace />
   }
 
-  if (requireAdmin) {
-    // Phase 4: admin role check not implemented; allow all for now
+  if (requireAdmin && !isAdmin) {
+    return <Navigate to="/dashboard" replace />
   }
 
   return <>{children}</>

@@ -2,8 +2,8 @@ export function WorksAnywhere() {
   const platforms = ['Wix', 'Squarespace', 'WordPress', 'Webflow', 'Custom HTML']
 
   return (
-    <section className="px-4 md:px-6 py-16 bg-white">
-      <p className="text-[#6B7280] text-xs font-medium tracking-[0.1em] uppercase text-center">
+    <section className="px-4 md:px-6 py-16 bg-toolstoy-canvas">
+      <p className="font-mono text-[#6B7280] text-xs font-medium tracking-[0.08em] uppercase text-center">
         WORKS ON ANY PLATFORM
       </p>
       <div className="mt-4 flex flex-wrap justify-center items-center gap-x-7 md:gap-x-12">

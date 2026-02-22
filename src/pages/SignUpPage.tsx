@@ -59,7 +59,7 @@ export function SignUpPage() {
             <img
               src={logoSrc}
               alt="toolstoy"
-              className="h-6 w-auto object-contain brightness-0 invert"
+              className="h-[19.2px] w-auto object-contain brightness-0 invert"
             />
           </div>
         </div>

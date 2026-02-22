@@ -26,7 +26,7 @@ export function FAQAccordion({ items }: FAQAccordionProps) {
       {items.map((item, index) => (
         <div
           key={index}
-          className="bg-white rounded-lg p-6 cursor-pointer transition-all duration-200"
+          className="bg-white rounded-lg p-6 cursor-pointer transition-colors duration-300"
           onClick={() => toggle(index)}
         >
           <div className="flex items-center justify-between gap-4">
@@ -46,7 +46,7 @@ export function FAQAccordion({ items }: FAQAccordionProps) {
             </span>
           </div>
           <div
-            className={`overflow-hidden transition-all duration-200 ease-in-out ${openIndices.has(index) ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+            className={`overflow-hidden transition-all duration-[400ms] ease-out ${openIndices.has(index) ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mt-3 pt-3 border-t border-[#E5E7EB] text-[15px] text-[#6B7280] leading-relaxed">

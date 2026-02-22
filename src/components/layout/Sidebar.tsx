@@ -22,6 +22,8 @@ const MERCHANT_LINKS = [
 
 const ADMIN_LINKS = [
   { label: 'Overview', href: '/admin', icon: 'chart', comingSoon: false },
+  { label: 'Bedrock Playground', href: '/admin/playground', icon: 'sparkle', comingSoon: false },
+  { label: 'Prompt Templates', href: '/admin/templates', icon: 'lab', comingSoon: false },
   { label: 'Quality Lab', href: '/admin/quality', icon: 'lab', comingSoon: false },
   { label: 'Pipeline', href: '/admin/pipeline', icon: 'pipeline', comingSoon: false },
   { label: 'Merchants', href: '/admin/merchants', icon: 'store', comingSoon: false },
@@ -93,7 +95,7 @@ function Icon({ name }: { name: string }) {
 export function Sidebar({ mobileOpen, onClose, isAdmin }: SidebarProps) {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, signOut } = useUser()
+  const { user, signOut, isAdmin: userIsAdmin } = useUser()
   const { merchant } = useMerchant()
   const links = isAdmin ? ADMIN_LINKS : MERCHANT_LINKS
 
@@ -122,10 +124,17 @@ export function Sidebar({ mobileOpen, onClose, isAdmin }: SidebarProps) {
           <img
             src={logoSrc}
             alt="toolstoy"
-            className="h-6 w-auto object-contain brightness-0"
+            className="h-[19.2px] w-auto object-contain brightness-0"
           />
         </Link>
         <div className="h-px bg-[#E5E7EB]" />
+
+        {/* Section label for admin */}
+        {isAdmin && (
+          <div className="px-5 pt-4 pb-1">
+            <span className="font-medium text-[10px] text-[#6B7280] uppercase tracking-wider">Toolstizer</span>
+          </div>
+        )}
 
         {/* Nav links */}
         <nav className="flex-1 overflow-y-auto py-2">
@@ -166,20 +175,40 @@ export function Sidebar({ mobileOpen, onClose, isAdmin }: SidebarProps) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-medium text-[14px] text-[#1A1A1A]">{user.name ?? user.email}</p>
                   <span className="bg-[#F5F5F5] text-[#6B7280] font-medium text-[14px] px-2 py-0.5 rounded-full">
-                    {isAdmin ? 'Admin' : (merchant?.plan ? merchant.plan.charAt(0).toUpperCase() + merchant.plan.slice(1) : 'Free')}
+                    {isAdmin ? 'Toolstizer' : (merchant?.plan ? merchant.plan.charAt(0).toUpperCase() + merchant.plan.slice(1) : 'Free')}
                   </span>
                 </div>
               </div>
-              <button
-                type="button"
-                className="text-[13px] text-[#6B7280] hover:text-[#1A1A1A] transition-colors"
-                onClick={() => {
-                  onClose()
-                  void handleSignOut()
-                }}
-              >
-                Sign Out
-              </button>
+              <div className="flex flex-col gap-2">
+                {userIsAdmin && !isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => onClose()}
+                    className="text-[13px] text-[#6B7280] hover:text-[#1A1A1A] transition-colors"
+                  >
+                    Admin Dashboard →
+                  </Link>
+                )}
+                {userIsAdmin && isAdmin && (
+                  <Link
+                    to="/dashboard"
+                    onClick={() => onClose()}
+                    className="text-[13px] text-[#6B7280] hover:text-[#1A1A1A] transition-colors"
+                  >
+                    ← Merchant Dashboard
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  className="text-[13px] text-[#6B7280] hover:text-[#1A1A1A] transition-colors text-left"
+                  onClick={() => {
+                    onClose()
+                    void handleSignOut()
+                  }}
+                >
+                  Sign Out
+                </button>
+              </div>
             </div>
           </>
         )}

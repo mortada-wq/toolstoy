@@ -13,20 +13,20 @@ export function Navbar() {
 
   return (
     <>
-    {mobileOpen && (
-      <div
-        className="fixed inset-0 z-40 md:hidden bg-black/20"
-        onClick={() => setMobileOpen(false)}
-        aria-hidden="true"
-      />
-    )}
-    <nav className="sticky top-0 z-50 bg-[#FFFFFF] border-b border-[#E5E7EB] h-14 md:h-16 flex items-center justify-between pl-6 pr-4 md:pl-10 md:pr-8">
+    <div
+      className={`fixed inset-0 z-40 md:hidden bg-black/20 transition-opacity duration-300 ease-out ${
+        mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+      }`}
+      onClick={() => setMobileOpen(false)}
+      aria-hidden={!mobileOpen}
+    />
+    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-toolstoy-border h-14 md:h-16 flex items-center justify-between pl-6 pr-4 md:pl-10 md:pr-8">
       {/* Logo - top-left with breathable padding */}
       <Link to="/" className="flex-shrink-0 py-2">
         <img
           src={logoSrc}
           alt="toolstoy"
-          className="h-[1.6rem] sm:h-[1.8rem] w-auto object-contain"
+          className="h-[1.28rem] sm:h-[1.44rem] w-auto object-contain"
         />
       </Link>
 
@@ -50,57 +50,98 @@ export function Navbar() {
         </Link>
         <Link
           to="/signup"
-          className="border border-[#E5E7EB] bg-[#1A1A1A] text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-all duration-200 hover:bg-[#282C34] min-w-[44px] min-h-[44px] flex items-center justify-center"
+          className="border border-[#E5E7EB] bg-[#1A1A1A] text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-all duration-300 ease-spring-out hover:bg-[#282C34] hover:scale-[1.02] active:scale-[0.98] min-w-[44px] min-h-[44px] flex items-center justify-center"
         >
           Start Free
         </Link>
       </div>
 
-      {/* Mobile hamburger */}
+      {/* Mobile hamburger - spring micro-interaction */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="md:hidden w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-toolstoy-nearblack transition-all duration-200"
+        className="md:hidden w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-toolstoy-nearblack transition-transform duration-300 ease-spring active:scale-95"
         aria-label="Toggle menu"
       >
         {mobileOpen ? (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 transition-transform duration-300 ease-spring" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         ) : (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 transition-transform duration-300 ease-spring" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         )}
       </button>
     </nav>
 
-    {/* Mobile panel */}
+    {/* Mobile panel - GPU-friendly transform (no height animation), Notion-like contextual reveal */}
     <div
-      className={`relative z-50 md:hidden bg-[#FFFFFF] border-b border-[#E5E7EB] overflow-hidden transition-all duration-200 ease-in-out ${
-        mobileOpen ? 'max-h-[400px]' : 'max-h-0'
+      className={`fixed top-14 left-0 right-0 z-[49] md:hidden overflow-hidden pointer-events-none ${
+        mobileOpen ? 'pointer-events-auto' : ''
       }`}
+      aria-hidden={!mobileOpen}
     >
-      <div className="flex flex-col items-center py-6 px-4 gap-1">
-        {navLinks.map((link) => (
+      <div
+        className={`bg-white/95 backdrop-blur-xl border-b border-toolstoy-border shadow-lg transition-all duration-300 ease-spring-out ${
+          mobileOpen
+            ? 'opacity-100 translate-y-0'
+            : 'opacity-0 -translate-y-2'
+        }`}
+        style={{ willChange: mobileOpen ? 'auto' : 'transform, opacity' }}
+      >
+        <div className="flex flex-col items-center py-6 px-4 gap-1">
+          {navLinks.map((link, i) => (
+            <Link
+              key={link.label}
+              to={link.href}
+              onClick={() => setMobileOpen(false)}
+              className="w-full text-center text-toolstoy-nearblack font-normal text-sm py-3 min-h-[48px] flex items-center justify-center transition-all duration-300 ease-spring-out opacity-0 translate-y-2 hover:bg-toolstoy-softgrey/50 rounded-lg"
+              style={
+                mobileOpen
+                  ? {
+                      transitionDelay: `${80 + i * 50}ms`,
+                      opacity: 1,
+                      transform: 'translateY(0)',
+                    }
+                  : { transitionDelay: '0ms' }
+              }
+            >
+              {link.label}
+            </Link>
+          ))}
           <Link
-            key={link.label}
-            to={link.href}
+            to="/signin"
             onClick={() => setMobileOpen(false)}
-            className="w-full text-center text-toolstoy-nearblack font-normal text-sm py-3 min-h-[48px] flex items-center justify-center"
+            className="w-full text-center text-toolstoy-nearblack font-normal text-sm py-3 min-h-[48px] flex items-center justify-center transition-all duration-300 ease-spring-out opacity-0 translate-y-2 hover:bg-toolstoy-softgrey/50 rounded-lg"
+            style={
+              mobileOpen
+                ? {
+                    transitionDelay: `${80 + navLinks.length * 50}ms`,
+                    opacity: 1,
+                    transform: 'translateY(0)',
+                  }
+                : { transitionDelay: '0ms' }
+            }
           >
-            {link.label}
+            Sign In
           </Link>
-        ))}
-        <Link to="/signin" className="w-full text-center text-toolstoy-nearblack font-normal text-sm py-3 min-h-[48px] flex items-center justify-center" onClick={() => setMobileOpen(false)}>
-          Sign In
-        </Link>
-        <Link
-          to="/signup"
-          onClick={() => setMobileOpen(false)}
-          className="w-full mt-4 bg-[#1A1A1A] text-white font-medium text-sm py-3.5 rounded-lg text-center min-h-[48px] flex items-center justify-center hover:bg-[#282C34] transition-all duration-200"
-        >
-          Start Free
-        </Link>
+          <Link
+            to="/signup"
+            onClick={() => setMobileOpen(false)}
+            className="w-full mt-4 bg-[#1A1A1A] text-white font-medium text-sm py-3.5 rounded-lg text-center min-h-[48px] flex items-center justify-center hover:bg-[#282C34] transition-all duration-300 ease-spring-out hover:scale-[1.02] active:scale-[0.98] opacity-0 translate-y-2"
+            style={
+              mobileOpen
+                ? {
+                    transitionDelay: `${80 + (navLinks.length + 1) * 50}ms`,
+                    opacity: 1,
+                    transform: 'translateY(0)',
+                  }
+                : { transitionDelay: '0ms' }
+            }
+          >
+            Start Free
+          </Link>
+        </div>
       </div>
     </div>
     </>

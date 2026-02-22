@@ -17,7 +17,7 @@ export function Footer() {
           <img
             src={logoSrc}
             alt="toolstoy"
-            className="h-7 w-auto object-contain brightness-0 invert"
+            className="h-[22.4px] w-auto object-contain brightness-0 invert"
           />
         </Link>
 

@@ -22,7 +22,7 @@ export function HowItWorks() {
   ]
 
   return (
-    <section className="px-4 md:px-6 py-16 sm:py-[60px] lg:py-[100px] bg-[#F5F5F5]">
+    <section className="px-4 md:px-6 py-16 sm:py-[60px] lg:py-[100px] bg-toolstoy-canvas">
       <div className="max-w-[900px] mx-auto">
         <h2 className="text-[30px] sm:text-[44px] font-bold text-[#1A1A1A] text-center">
           From Product to Personality.
@@ -33,9 +33,9 @@ export function HowItWorks() {
 
         <div className="mt-16 flex flex-col md:flex-row gap-12 md:gap-12">
           {steps.map((step, index) => (
-            <ScrollReveal key={step.number} delay={index * 80}>
-            <div className="flex-1 relative min-w-0">
-              <span className="absolute -top-2 left-0 font-bold text-[96px] text-[#EBEBEB] leading-none select-none -z-0">
+            <ScrollReveal key={step.number} delay={index * 100}>
+            <div className="group flex-1 relative min-w-0">
+              <span className="absolute -top-2 left-0 font-mono font-bold text-[96px] text-[#EBEBEB] leading-none select-none -z-0 group-hover:text-[#D8D8D8] transition-colors duration-[400ms]">
                 {step.number}
               </span>
               <h3 className="relative z-10 font-normal text-[22px] text-toolstoy-nearblack -mt-1">

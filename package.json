@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.995.0",
+    "@aws-sdk/client-lambda": "^3.995.0",
     "@aws-sdk/client-sqs": "^3.995.0",
     "aws-amplify": "^6.16.2",
+    "pg": "^8.13.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.13.0"
@@ -21,6 +23,7 @@
     "@aws-amplify/backend": "^1.21.0",
     "@aws-amplify/backend-cli": "^1.8.2",
     "@types/node": "^25.3.0",
+    "@types/pg": "^8.11.10",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",

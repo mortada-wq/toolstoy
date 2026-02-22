@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Toolstoy Session</title>
+</head>
+<body>
+    <h1>Clearing session...</h1>
+    <script>
+        // Clear all localStorage
+        localStorage.clear();
+        
+        // Clear all sessionStorage
+        sessionStorage.clear();
+        
+        // Clear all cookies
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        // Clear IndexedDB
+        if (window.indexedDB) {
+            indexedDB.databases().then(dbs => {
+                dbs.forEach(db => indexedDB.deleteDatabase(db.name));
+            });
+        }
+        
+        alert('Session cleared! You can close this tab and try signing in again.');
+    </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'
 import { FAQAccordion } from '../components/FAQAccordion'
+import { Button } from '../components/ui/Button'
 
 const FAQ_ITEMS = [
   {
@@ -20,7 +20,7 @@ const FAQ_ITEMS = [
   },
   {
     question: 'What happens if my character doesn\'t know the answer to something?',
-    answer: 'The character acknowledges it honestly and in-character — no generic "I don\'t know" responses. Edmund flags knowledge gaps automatically so you can fill them.',
+    answer: 'The character acknowledges it honestly and in-character — no generic "I don\'t know" responses. Toolstizer flags knowledge gaps automatically so you can fill them.',
   },
 ]
 
@@ -32,7 +32,7 @@ const CHECK = (
 
 export function PricingPage() {
   return (
-    <div className="bg-white font-inter">
+    <div className="bg-toolstoy-canvas font-inter">
       {/* Hero */}
       <section className="px-4 md:px-6 pt-[64px] md:pt-[100px] pb-8">
         <div className="max-w-[600px] mx-auto text-center">
@@ -65,12 +65,11 @@ export function PricingPage() {
                   </div>
                 ))}
               </div>
-              <Link
-                to="/signup"
-                className="block mt-7 w-full bg-toolstoy-charcoal text-white font-semibold text-[15px] py-3.5 rounded-lg text-center transition-all duration-200 hover:opacity-90"
-              >
-                Get Started Free
-              </Link>
+              <div className="mt-7 flex justify-center">
+                <Button to="/signup" variant="primary" size="md" className="hover:opacity-90">
+                  Get Started Free
+                </Button>
+              </div>
             </div>
 
             {/* Pro - Featured */}
@@ -85,19 +84,18 @@ export function PricingPage() {
               <p className="mt-1 text-sm text-toolstoy-muted">per month, billed monthly</p>
               <div className="border-t border-white/15 my-6" />
               <div className="space-y-3.5">
-                {['5 characters', 'Unlimited conversations', 'Auto-generated knowledge base', 'Widget on unlimited websites', '4 animation states', 'Edmund analytics dashboard', 'Email support'].map((f) => (
+                {['5 characters', 'Unlimited conversations', 'Auto-generated knowledge base', 'Widget on unlimited websites', '4 animation states', 'Toolstizer analytics dashboard', 'Email support'].map((f) => (
                   <div key={f} className="flex items-start gap-3.5">
                     <span className="text-white mt-0.5">{CHECK}</span>
                     <span className="text-[15px] text-white">{f}</span>
                   </div>
                 ))}
               </div>
-              <Link
-                to="/signup"
-                className="block mt-7 w-full bg-white text-[#1A1A1A] font-semibold text-[15px] py-3.5 rounded-lg text-center transition-all duration-200 hover:bg-[#F5F5F5]"
-              >
-                Start Pro Trial
-              </Link>
+              <div className="mt-7 flex justify-center">
+                <Button to="/signup" variant="light" size="md">
+                  Start Pro Trial
+                </Button>
+              </div>
             </div>
 
             {/* Studio */}
@@ -116,12 +114,11 @@ export function PricingPage() {
                   </div>
                 ))}
               </div>
-              <a
-                href="mailto:hello@toolstoy.app"
-                className="block mt-7 w-full bg-toolstoy-charcoal text-white font-semibold text-[15px] py-3.5 rounded-lg text-center transition-all duration-200 hover:opacity-90"
-              >
-                Talk to Us
-              </a>
+              <div className="mt-7 flex justify-center">
+                <Button href="mailto:hello@toolstoy.app" variant="primary" size="md" className="hover:opacity-90">
+                  Talk to Us
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -143,12 +140,14 @@ export function PricingPage() {
           <h2 className="text-[28px] md:text-[40px] font-bold text-white">
             Your products are waiting to introduce themselves.
           </h2>
-          <Link
+          <Button
             to="/signup"
-            className="inline-block mt-8 bg-white text-toolstoy-nearblack font-semibold text-base px-9 py-4 rounded-lg w-full sm:w-auto transition-all duration-200 hover:bg-gray-100"
+            variant="light"
+            size="lg"
+            className="mt-8"
           >
             Create Your First Character Free
-          </Link>
+          </Button>
         </div>
       </section>
     </div>

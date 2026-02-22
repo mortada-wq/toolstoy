@@ -1,5 +1,30 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { DigitalAlchemy } from '../../components/DigitalAlchemy'
+
+// Type definitions
+interface GenerationJob {
+  jobId: string
+  status: 'processing' | 'completed' | 'failed'
+  currentStep?: string
+  statesGenerated?: string[]
+  totalStates?: number
+  errorMessage?: string
+}
+
+interface CharacterVariation {
+  variationNumber: number
+  imageUrl: string
+  seed: number
+  timestamp: string
+}
+
+interface ApiError {
+  error: string
+  message: string
+  suggestedAction?: string
+  retryAfter?: number
+}
 
 function ExpertIcon() {
   return (
@@ -88,23 +113,166 @@ export function CharacterStudio() {
   const [reservedness, setReservedness] = useState(50)
   const [generating, setGenerating] = useState(false)
   const [progressStep, setProgressStep] = useState(0)
+  
+  // New state for Task 5.7
+  const [productImage, setProductImage] = useState<File | null>(null)
+  const [productImagePreview, setProductImagePreview] = useState<string | null>(null)
+  const [productName, setProductName] = useState('')
+  const [brandName, setBrandName] = useState('')
+  const [currentJob, setCurrentJob] = useState<GenerationJob | null>(null)
+  const [variations, setVariations] = useState<CharacterVariation[]>([])
+  const [selectedVariation, setSelectedVariation] = useState<number | null>(null)
+  const [error, setError] = useState<ApiError | null>(null)
+  const [estimatedTime, setEstimatedTime] = useState<number>(0)
+  const [generationComplete, setGenerationComplete] = useState(false)
+  const [availableStates, setAvailableStates] = useState<string[]>([])
 
   const toggleVibe = (v: string) => {
     setSelectedVibes((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]))
   }
 
-  const handleGenerate = () => {
-    setGenerating(true)
-    setProgressStep(1) // Step 1 (soul) complete, Step 2 (knowledge) in progress
-    const interval = setInterval(() => {
-      setProgressStep((p) => {
-        if (p >= 3) {
-          clearInterval(interval)
-          return 4
+  // Convert image to base64
+  const convertImageToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  // Handle image upload
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setProductImage(file)
+      const reader = new FileReader()
+      reader.onloadend = () => setProductImagePreview(reader.result as string)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // API call helper
+  const apiCall = async <T,>(endpoint: string, options: RequestInit = {}): Promise<T> => {
+    const token = localStorage.getItem('authToken')
+    const response = await fetch(`/api/bedrock${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers,
+      },
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json() as ApiError
+      throw errorData
+    }
+    
+    return response.json() as Promise<T>
+  }
+
+  // Poll job status
+  const pollJobStatus = async (jobId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const status = await apiCall<GenerationJob>(`/job-status/${jobId}`)
+        setCurrentJob(status)
+        
+        if (status.status === 'completed') {
+          clearInterval(pollInterval)
+          setGenerating(false)
+          setGenerationComplete(true)
+          setAvailableStates(status.statesGenerated || [])
+        } else if (status.status === 'failed') {
+          clearInterval(pollInterval)
+          setGenerating(false)
+          setError({
+            error: 'GENERATION_FAILED',
+            message: status.errorMessage || 'Character generation failed',
+          })
         }
-        return p + 1
+      } catch (err) {
+        clearInterval(pollInterval)
+        setGenerating(false)
+        setError(err as ApiError)
+      }
+    }, 3000)
+  }
+
+  // Handle character generation
+  const handleGenerate = async () => {
+    if (!productImage || !productName) {
+      setError({
+        error: 'VALIDATION_ERROR',
+        message: 'Please upload a product image and enter a product name',
       })
-    }, 1500)
+      return
+    }
+
+    setGenerating(true)
+    setError(null)
+    setVariations([])
+    setGenerationComplete(false)
+    setProgressStep(1)
+
+    try {
+      const imageBase64 = await convertImageToBase64(productImage)
+      
+      // Map character type to API format
+      const characterTypeMap: Record<string, 'mascot' | 'spokesperson' | 'sidekick' | 'expert'> = {
+        'The Expert': 'expert',
+        'The Entertainer': 'mascot',
+        'The Advisor': 'spokesperson',
+        'The Enthusiast': 'sidekick',
+      }
+      
+      const response = await apiCall<{
+        jobId: string
+        variations: CharacterVariation[]
+        estimatedTime: number
+      }>('/generate-character', {
+        method: 'POST',
+        body: JSON.stringify({
+          productImage: imageBase64,
+          productName,
+          characterType: characterTypeMap[characterType || 'The Expert'],
+          vibeTags: selectedVibes,
+        }),
+      })
+
+      setCurrentJob({ jobId: response.jobId, status: 'processing' })
+      setVariations(response.variations)
+      setEstimatedTime(response.estimatedTime || 120)
+      
+      // Start polling for job status
+      pollJobStatus(response.jobId)
+      
+      // Simulate progress steps
+      const interval = setInterval(() => {
+        setProgressStep((p) => {
+          if (p >= 3) {
+            clearInterval(interval)
+            return 4
+          }
+          return p + 1
+        })
+      }, estimatedTime / 4)
+      
+    } catch (err) {
+      const apiError = err as ApiError
+      setError(apiError)
+      setGenerating(false)
+    }
+  }
+
+  // Handle try again
+  const handleTryAgain = () => {
+    setError(null)
+    setGenerationComplete(false)
+    setVariations([])
+    setCurrentJob(null)
+    setProgressStep(0)
   }
 
   return (
@@ -156,54 +324,62 @@ export function CharacterStudio() {
                 What product are we building a character for?
               </h2>
               <p className="mt-2 text-[15px] text-[#6B7280] font-normal">
-                Paste your product URL — we extract everything automatically. Or upload manually.
+                Upload your product image and provide details to get started.
               </p>
 
+              {/* Product Image Upload - Prominent Feature */}
               <div className="mt-8">
-                <label className="block font-medium text-[13px] text-[#1A1A1A] mb-1.5">
-                  Product URL
+                <label className="block font-medium text-[13px] text-[#1A1A1A] mb-2">
+                  Product Image *
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    placeholder="https://yourstore.com/products/your-product"
-                    className="flex-1 border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] font-normal focus:border-[#1A1A1A] focus:outline-none"
-                  />
-                  <button className="border border-[#1A1A1A] bg-white text-[#1A1A1A] font-semibold text-[14px] px-[18px] py-3 rounded-lg hover:bg-[#FAFAFA] shrink-0">
-                    Extract
-                  </button>
-                </div>
+                {!productImagePreview ? (
+                  <label className="block cursor-pointer">
+                    <div className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-12 bg-[#FAFAFA] text-center hover:border-[#5B7C99] transition-all">
+                      <svg className="w-10 h-10 mx-auto text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                      <p className="mt-3 font-medium text-[16px] text-[#1A1A1A]">Drop your product image here</p>
+                      <p className="text-[14px] text-[#6B7280] font-normal mt-1">or click to browse — JPG, PNG up to 10MB</p>
+                    </div>
+                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                  </label>
+                ) : (
+                  <div className="relative border-2 border-[#5B7C99] rounded-lg p-4 bg-white">
+                    <img src={productImagePreview} alt="Product" className="w-full h-64 object-contain rounded-lg" />
+                    <button
+                      onClick={() => {
+                        setProductImage(null)
+                        setProductImagePreview(null)
+                      }}
+                      className="absolute top-6 right-6 bg-white border border-[#E5E7EB] rounded-full p-2 hover:bg-[#F5F5F5] transition-all"
+                    >
+                      <svg className="w-5 h-5 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <div className="my-5 flex items-center gap-4">
-                <div className="flex-1 h-px bg-[#E5E7EB]" />
-                <span className="text-[13px] text-[#6B7280]">or</span>
-                <div className="flex-1 h-px bg-[#E5E7EB]" />
-              </div>
-
-              <div className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-8 bg-[#FAFAFA] text-center">
-                <svg className="w-7 h-7 mx-auto text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                <p className="mt-2.5 font-medium text-[14px] text-[#1A1A1A]">Drop your product image here</p>
-                <p className="text-[13px] text-[#6B7280] font-normal">or click to browse — JPG, PNG up to 10MB</p>
-              </div>
-
-              <div className="mt-8 space-y-4">
+              <div className="mt-6 space-y-4">
                 <div>
-                  <label className="block font-medium text-[13px] text-[#1A1A1A] mb-1.5">Product name</label>
+                  <label className="block font-medium text-[13px] text-[#1A1A1A] mb-1.5">Product Name *</label>
                   <input
                     type="text"
-                    value="Your Product Name"
-                    className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] font-normal"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    placeholder="Enter your product name"
+                    className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] font-normal focus:border-[#5B7C99] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-[13px] text-[#1A1A1A] mb-1.5">Description</label>
-                  <textarea
-                    rows={3}
-                    defaultValue="Extracted product description appears here automatically. Edit anything before continuing."
-                    className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] font-normal"
+                  <label className="block font-medium text-[13px] text-[#1A1A1A] mb-1.5">Brand Name</label>
+                  <input
+                    type="text"
+                    value={brandName}
+                    onChange={(e) => setBrandName(e.target.value)}
+                    placeholder="Enter your brand name (optional)"
+                    className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] font-normal focus:border-[#5B7C99] focus:outline-none"
                   />
                 </div>
               </div>
@@ -211,7 +387,8 @@ export function CharacterStudio() {
               <div className="mt-8 flex justify-end">
                 <button
                   onClick={() => setStep(2)}
-                  className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg hover:opacity-90"
+                  disabled={!productImage || !productName}
+                  className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next: Build the Character
                 </button>
@@ -438,20 +615,48 @@ export function CharacterStudio() {
         {step === 5 && (
           <div className="max-w-[560px] mx-auto">
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-8">
-              <h2 className="font-bold text-2xl text-[#1A1A1A]">Your character is ready to generate.</h2>
-              <p className="mt-2 text-[15px] text-[#6B7280]">
-                Soul Engine will take it from here. Amazon Bedrock handles everything automatically.
-              </p>
+              {/* Error Display */}
+              {error && (
+                <div className="mb-6 bg-[#F5F1ED] border border-[#8B7355] rounded-lg p-4">
+                  <p className="text-[14px] text-[#5C4A3A] font-medium">{error.error}</p>
+                  <p className="text-[13px] text-[#5C4A3A] mt-1">{error.message}</p>
+                  {error.suggestedAction && (
+                    <p className="text-[12px] text-[#6B7280] mt-2">→ {error.suggestedAction}</p>
+                  )}
+                  {error.retryAfter && (
+                    <p className="text-[12px] text-[#6B7280] mt-2">Retry after: {error.retryAfter}s</p>
+                  )}
+                  <div className="flex gap-3 mt-4">
+                    <button
+                      onClick={handleTryAgain}
+                      className="flex-1 bg-[#8B7355] text-white py-2 rounded-lg font-medium text-[13px] hover:bg-[#5C4A3A] transition-all"
+                    >
+                      Try Again
+                    </button>
+                    <button
+                      onClick={() => setStep(1)}
+                      className="flex-1 border border-[#8B7355] text-[#5C4A3A] py-2 rounded-lg font-medium text-[13px] hover:bg-[#F5F1ED] transition-all"
+                    >
+                      Upload Custom Image
+                    </button>
+                  </div>
+                </div>
+              )}
 
-              {!generating ? (
+              {!generating && !generationComplete && !error && (
                 <>
+                  <h2 className="font-bold text-2xl text-[#1A1A1A]">Your character is ready to generate.</h2>
+                  <p className="mt-2 text-[15px] text-[#6B7280]">
+                    Toolstizer will create your character with Amazon Bedrock.
+                  </p>
+
                   <div className="mt-8 space-y-0">
                     {[
-                      ['Product', 'Your Product Name'],
+                      ['Product', productName],
+                      ['Brand', brandName || 'Not specified'],
                       ['Character Type', characterType || 'The Expert'],
                       ['Character Name', charName],
-                      ['Knowledge Base', '30 Q&A pairs ready'],
-                      ['Widget Layout', 'Side by Side'],
+                      ['Vibe Tags', selectedVibes.join(', ')],
                     ].map(([label, value], i) => (
                       <div
                         key={label}
@@ -463,12 +668,12 @@ export function CharacterStudio() {
                     ))}
                   </div>
 
-                  <div className="mt-5 p-5 bg-[#F5F5F5] rounded-lg border-l-[3px] border-l-[#1A1A1A]">
+                  <div className="mt-5 p-5 bg-[#F5F5F5] rounded-lg border-l-[3px] border-l-[#5B7C99]">
                     <p className="font-semibold text-[14px] text-[#1A1A1A]">Amazon Bedrock will generate:</p>
                     <ul className="mt-2.5 text-[14px] text-[#6B7280] leading-relaxed space-y-1">
-                      <li>· Full Character Bible (personality, quirks, voice)</li>
-                      <li>· Character image</li>
-                      <li>· 4 animation states</li>
+                      <li>· 3 character variations to choose from</li>
+                      <li>· Full character personality and voice</li>
+                      <li>· Animation states for your subscription tier</li>
                       <li>· Widget ready to embed</li>
                     </ul>
                   </div>
@@ -480,47 +685,135 @@ export function CharacterStudio() {
                     Generate My Character
                   </button>
                 </>
-              ) : (
+              )}
+
+              {generating && (
                 <>
-                  <button
-                    disabled
-                    className="mt-6 w-full bg-[#1A1A1A]/80 text-white font-bold text-base py-4 rounded-lg animate-pulse"
-                  >
-                    Generating...
-                  </button>
+                  <h2 className="font-bold text-2xl text-[#1A1A1A] mb-4">
+                    Toolstizer is cooking your character...
+                  </h2>
+                  
+                  <DigitalAlchemy
+                    progressStep={progressStep}
+                    steps={[
+                      { label: 'Analyzing product image' },
+                      { label: 'Building character soul' },
+                      { label: 'Generating variations' },
+                      { label: 'Creating animations' },
+                    ]}
+                  />
 
-                  <div className="mt-5 space-y-3">
-                    {[
-                      { label: 'Soul extraction', done: progressStep >= 1, active: progressStep === 0 },
-                      { label: 'Knowledge base', done: progressStep >= 2, active: progressStep === 1 },
-                      { label: 'Image generation', done: progressStep >= 3, active: progressStep === 2 },
-                      { label: 'Creating animations', done: progressStep >= 4, active: progressStep === 3 },
-                    ].map((item) => (
-                      <div key={item.label} className="flex items-center gap-3">
-                        {item.done ? (
-                          <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          </div>
-                        ) : item.active ? (
-                          <div className="w-6 h-6 border-2 border-[#1A1A1A] border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <div className="w-6 h-6 rounded-full border border-[#E5E7EB]" />
-                        )}
-                        <span className="text-[14px] text-[#1A1A1A]">{item.label}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {estimatedTime > 0 && (
+                    <div className="mt-6 p-4 bg-[#F5F5F5] rounded-lg">
+                      <p className="text-[13px] text-[#6B7280] text-center">
+                        Estimated completion time: <span className="font-semibold text-[#1A1A1A]">{Math.ceil(estimatedTime / 60)} minutes</span>
+                      </p>
+                      {currentJob?.currentStep && (
+                        <p className="text-[12px] text-[#6B7280] text-center mt-2">
+                          {currentJob.currentStep}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
-                  <p className="mt-4 text-center text-[13px] text-[#6B7280]">
-                    Usually ready in a few minutes. We&apos;ll notify you when it&apos;s done.
+                  <p className="mt-6 text-center text-[13px] text-[#6B7280]">
+                    Usually ready in a few minutes. You can leave this page — we'll notify you when it's done.
                   </p>
 
                   <div className="mt-6 flex justify-start">
                     <Link
                       to="/dashboard"
-                      className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]"
+                      className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A] transition-colors"
+                    >
+                      Back to Dashboard
+                    </Link>
+                  </div>
+                </>
+              )}
+
+              {generationComplete && !error && (
+                <>
+                  <div className="text-center mb-6">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-[#5B7C99] rounded-full mb-4">
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <h2 className="font-bold text-2xl text-[#1A1A1A]">Your character is ready!</h2>
+                    <p className="mt-2 text-[15px] text-[#6B7280]">
+                      {variations.length} variations generated with {availableStates.length} animation states
+                    </p>
+                  </div>
+
+                  {/* Character Preview */}
+                  {variations.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="font-medium text-[14px] text-[#1A1A1A] mb-3">Character Variations</h3>
+                      <div className="grid grid-cols-3 gap-3">
+                        {variations.map((v) => (
+                          <div
+                            key={v.variationNumber}
+                            onClick={() => setSelectedVariation(v.variationNumber)}
+                            className={`cursor-pointer rounded-lg border-2 overflow-hidden ${
+                              selectedVariation === v.variationNumber
+                                ? 'border-[#5B7C99] ring-2 ring-[#5B7C99]/30'
+                                : 'border-[#E5E7EB]'
+                            }`}
+                          >
+                            <img src={v.imageUrl} alt={`Variation ${v.variationNumber}`} className="w-full aspect-square object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Available States */}
+                  {availableStates.length > 0 && (
+                    <div className="mb-6 p-4 bg-[#F5F5F5] rounded-lg">
+                      <p className="text-[13px] font-medium text-[#1A1A1A] mb-2">Available Animation States:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {availableStates.map((state) => (
+                          <span
+                            key={state}
+                            className="px-3 py-1 bg-[#5B7C99] text-white text-[12px] rounded-full"
+                          >
+                            {state}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <button
+                      onClick={() => {
+                        // Navigate to widget demo with this character
+                        window.location.href = '/dashboard/widget/demo';
+                      }}
+                      className="w-full bg-[#5B7C99] text-white font-bold text-base py-4 rounded-lg hover:bg-[#4A6B85] transition-all"
+                    >
+                      View Widget Demo
+                    </button>
+                    
+                    <div className="text-center">
+                      <button
+                        onClick={() => {
+                          // Show embed code
+                          const embedCode = `<script src="https://cdn.toolstoy.app/widget.js" data-character-id="${selectedCharacter?.id || 'demo'}" async></script>`;
+                          navigator.clipboard.writeText(embedCode);
+                          alert('Embed code copied to clipboard!');
+                        }}
+                        className="text-[14px] text-[#5B7C99] hover:text-[#4A6B85] underline"
+                      >
+                        Copy Embed Code
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex justify-center">
+                    <Link
+                      to="/dashboard"
+                      className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A] transition-colors"
                     >
                       Back to Dashboard
                     </Link>

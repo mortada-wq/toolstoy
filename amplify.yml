@@ -3,7 +3,8 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm install
+        - npm ci
+        - npx ampx sandbox --once
     build:
       commands:
         - npm run build

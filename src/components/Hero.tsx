@@ -3,7 +3,7 @@ import { ScrollReveal } from './ScrollReveal'
 
 export function Hero() {
   return (
-    <section className="relative px-4 md:px-6 py-20 md:py-28 lg:py-[140px] bg-white">
+    <section className="relative px-4 md:px-6 py-20 md:py-28 lg:py-[140px] bg-toolstoy-canvas">
       <div className="max-w-[720px] mx-auto text-center relative">
         <ScrollReveal delay={0}>
           <h1 className="text-[36px] leading-[1.05] tracking-[-0.02em] sm:text-5xl lg:text-[72px] font-bold text-[#1A1A1A] mb-8">
@@ -18,12 +18,20 @@ export function Hero() {
           </p>
         </ScrollReveal>
         <ScrollReveal delay={160}>
-          <Link
-            to="/signup"
-            className="inline-block mt-11 bg-[#1A1A1A] text-white font-medium text-base sm:text-[17px] px-9 py-4 rounded-lg w-full sm:w-auto transition-all duration-200 hover:bg-[#282C34] min-h-[44px] flex items-center justify-center"
-          >
-            Create Your First Character
-          </Link>
+          <div className="mt-11 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              to="/signup"
+              className="w-fit px-10 py-3.5 bg-[#1A1A1A] text-white font-medium text-base sm:text-[17px] rounded-lg transition-all duration-200 hover:bg-[#282C34] flex items-center justify-center"
+            >
+              Create Your First Character
+            </Link>
+            <a
+              href="#showcase"
+              className="text-[15px] text-[#6B7280] hover:text-[#1A1A1A] transition-colors duration-200"
+            >
+              View demo →
+            </a>
+          </div>
         </ScrollReveal>
       </div>
     </section>

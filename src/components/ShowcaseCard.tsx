@@ -18,7 +18,7 @@ export function ShowcaseCard({ layoutName, characterName, productType, onClick }
   return (
     <button
       onClick={onClick}
-      className="w-full bg-[#F5F5F5] border border-[#E5E7EB] rounded-lg overflow-hidden cursor-pointer text-left transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_8px_32px_rgba(0,0,0,0.25)] min-w-0"
+      className="w-full bg-white rounded-lg overflow-hidden cursor-pointer text-left transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-[1.02] hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] active:scale-[0.98] border border-toolstoy-border min-w-0 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
     >
       {/* Preview zone */}
       <div className="relative bg-[#E5E7EB] flex items-center justify-center h-[200px] sm:h-[240px] lg:h-[280px]">

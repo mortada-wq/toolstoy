@@ -69,7 +69,7 @@ export function ResetPasswordPage() {
             <img
               src={logoSrc}
               alt="toolstoy"
-              className="h-6 w-auto object-contain"
+              className="h-[19.2px] w-auto object-contain"
               style={{ filter: 'brightness(0) invert(1)' }}
             />
           </div>

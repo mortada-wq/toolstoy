@@ -1,5 +1,6 @@
 import { defineBackend } from '@aws-amplify/backend'
 import { Stack } from 'aws-cdk-lib'
+import { Function } from 'aws-cdk-lib/aws-lambda'
 import {
   CorsHttpMethod,
   HttpApi,
@@ -15,6 +16,9 @@ import { apiPersonas } from './functions/api-personas/resource'
 import { apiWidget } from './functions/api-widget/resource'
 import { apiScraper } from './functions/api-scraper/resource'
 import { apiAdmin } from './functions/api-admin/resource'
+import { soulEngine } from './functions/soul-engine/resource'
+import { apiBedrock } from './functions/api-bedrock/resource'
+
 const backend = defineBackend({
   auth,
   data,
@@ -23,6 +27,8 @@ const backend = defineBackend({
   apiWidget,
   apiScraper,
   apiAdmin,
+  apiBedrock,
+  soulEngine,
 })
 
 const apiStack = backend.createStack('api-stack')
@@ -54,6 +60,10 @@ const scraperIntegration = new HttpLambdaIntegration(
 const adminIntegration = new HttpLambdaIntegration(
   'AdminLambdaIntegration',
   backend.apiAdmin.resources.lambda
+)
+const bedrockIntegration = new HttpLambdaIntegration(
+  'BedrockLambdaIntegration',
+  backend.apiBedrock.resources.lambda
 )
 
 const httpApi = new HttpApi(apiStack, 'ToolstoyHttpApi', {
@@ -158,6 +168,31 @@ httpApi.addRoutes({
   authorizer: userPoolAuthorizer,
 })
 
+httpApi.addRoutes({
+  path: '/api/bedrock/{proxy+}',
+  methods: [HttpMethod.ANY],
+  integration: bedrockIntegration,
+  authorizer: userPoolAuthorizer,
+})
+httpApi.addRoutes({
+  path: '/api/bedrock/generate-character',
+  methods: [HttpMethod.POST, HttpMethod.OPTIONS],
+  integration: bedrockIntegration,
+  authorizer: userPoolAuthorizer,
+})
+httpApi.addRoutes({
+  path: '/api/bedrock/generate-states',
+  methods: [HttpMethod.POST, HttpMethod.OPTIONS],
+  integration: bedrockIntegration,
+  authorizer: userPoolAuthorizer,
+})
+httpApi.addRoutes({
+  path: '/api/bedrock/approve-variation',
+  methods: [HttpMethod.POST, HttpMethod.OPTIONS],
+  integration: bedrockIntegration,
+  authorizer: userPoolAuthorizer,
+})
+
 const apiPolicy = new Policy(apiStack, 'ApiPolicy', {
   statements: [
     new PolicyStatement({
@@ -172,7 +207,8 @@ const apiPolicy = new Policy(apiStack, 'ApiPolicy', {
 backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(apiPolicy)
 
 // Merchants Lambda: User Pool ID + AdminDeleteUser for account deletion
-backend.apiMerchants.resources.lambda.addEnvironment(
+const merchantsLambda = backend.apiMerchants.resources.lambda as Function
+merchantsLambda.addEnvironment(
   'USER_POOL_ID',
   backend.auth.resources.userPool.userPoolId
 )
@@ -181,6 +217,39 @@ backend.apiMerchants.resources.lambda.addToRolePolicy(
     actions: ['cognito-idp:AdminDeleteUser'],
     resources: [backend.auth.resources.userPool.userPoolArn],
   })
+)
+
+// Bedrock Lambda: Invoke Soul Engine Lambda
+backend.apiBedrock.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    actions: ['lambda:InvokeFunction'],
+    resources: ['arn:aws:lambda:*:*:function:soul-engine'],
+  })
+)
+
+// Soul Engine Lambda: Bedrock and S3 permissions
+backend.soulEngine.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    actions: ['bedrock:InvokeModel'],
+    resources: [
+      'arn:aws:bedrock:*::foundation-model/amazon.titan-image-generator-v1',
+      'arn:aws:bedrock:*::foundation-model/amazon.nova-canvas-v1:0'
+    ]
+  })
+)
+
+backend.soulEngine.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    actions: ['s3:PutObject', 's3:GetObject'],
+    resources: ['arn:aws:s3:::toolstoy-character-images/*']
+  })
+)
+
+// API Bedrock: Pass Soul Engine function name
+const bedrockLambda = backend.apiBedrock.resources.lambda as Function
+bedrockLambda.addEnvironment(
+  'SOUL_ENGINE_FUNCTION_NAME',
+  backend.soulEngine.resources.lambda.functionName
 )
 
 backend.addOutput({

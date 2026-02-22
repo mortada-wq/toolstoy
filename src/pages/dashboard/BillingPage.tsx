@@ -32,7 +32,7 @@ const PLANS = [
       'Auto-generated knowledge base',
       'Unlimited website embeds',
       'All 7 widget layouts',
-      'Edmund analytics access',
+      'Toolstizer analytics access',
       'Email support',
       'No Toolstoy branding on widget',
     ],

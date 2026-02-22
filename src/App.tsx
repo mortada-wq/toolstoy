@@ -4,6 +4,7 @@ import { AuthGuard } from './components/AuthGuard'
 import { OnboardingGuard } from './components/OnboardingGuard'
 import { PlanLimitGuard } from './components/PlanLimitGuard'
 import { ScrollToTop } from './components/ScrollToTop'
+import { AdminAnnotationMode } from './components/admin/AdminAnnotationMode'
 import { MarketingLayout } from './components/layout/MarketingLayout'
 import { DashboardShell } from './components/layout/DashboardShell'
 import { HomePage } from './pages/HomePage'
@@ -25,10 +26,13 @@ const CharacterStudio = lazy(() => import('./pages/dashboard/CharacterStudio').t
 const MyCharacters = lazy(() => import('./pages/dashboard/MyCharacters').then((m) => ({ default: m.MyCharacters })))
 const EditCharacterPage = lazy(() => import('./pages/dashboard/EditCharacterPage').then((m) => ({ default: m.EditCharacterPage })))
 const WidgetSettings = lazy(() => import('./pages/dashboard/WidgetSettings').then((m) => ({ default: m.WidgetSettings })))
+const WidgetDemo = lazy(() => import('./pages/dashboard/WidgetDemo').then((m) => ({ default: m.WidgetDemo })))
 const BillingPage = lazy(() => import('./pages/dashboard/BillingPage').then((m) => ({ default: m.BillingPage })))
 const SettingsPage = lazy(() => import('./pages/dashboard/SettingsPage').then((m) => ({ default: m.SettingsPage })))
 const AnalyticsPage = lazy(() => import('./pages/dashboard/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })))
-const EdmundOverview = lazy(() => import('./pages/admin/EdmundOverview').then((m) => ({ default: m.EdmundOverview })))
+const ToolstizerOverview = lazy(() => import('./pages/admin/ToolstizerOverview').then((m) => ({ default: m.ToolstizerOverview })))
+const BedrockPlayground = lazy(() => import('./pages/admin/BedrockPlaygroundSimple').then((m) => ({ default: m.BedrockPlaygroundSimple })))
+const PromptTemplateManager = lazy(() => import('./pages/admin/PromptTemplateManager').then((m) => ({ default: m.PromptTemplateManager })))
 
 function PageFallback() {
   return (
@@ -42,6 +46,7 @@ function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <AdminAnnotationMode />
       <Routes>
         {/* Marketing routes */}
         <Route element={<MarketingLayout />}>
@@ -70,6 +75,7 @@ function App() {
           <Route path="characters" element={<Suspense fallback={<PageFallback />}><MyCharacters /></Suspense>} />
           <Route path="characters/:id/edit" element={<Suspense fallback={<PageFallback />}><EditCharacterPage /></Suspense>} />
           <Route path="widget" element={<Suspense fallback={<PageFallback />}><WidgetSettings /></Suspense>} />
+          <Route path="widget/demo" element={<Suspense fallback={<PageFallback />}><WidgetDemo /></Suspense>} />
           <Route path="billing" element={<Suspense fallback={<PageFallback />}><BillingPage /></Suspense>} />
           <Route path="settings" element={<Suspense fallback={<PageFallback />}><SettingsPage /></Suspense>} />
           <Route path="analytics" element={<Suspense fallback={<PageFallback />}><AnalyticsPage /></Suspense>} />
@@ -77,11 +83,13 @@ function App() {
 
         {/* Admin routes — auth protected */}
         <Route path="/admin" element={<AuthGuard requireAdmin><DashboardShell /></AuthGuard>}>
-          <Route index element={<Suspense fallback={<PageFallback />}><EdmundOverview /></Suspense>} />
-          <Route path="quality" element={<Suspense fallback={<PageFallback />}><EdmundOverview /></Suspense>} />
-          <Route path="pipeline" element={<Suspense fallback={<PageFallback />}><EdmundOverview /></Suspense>} />
-          <Route path="merchants" element={<Suspense fallback={<PageFallback />}><EdmundOverview /></Suspense>} />
-          <Route path="alerts" element={<Suspense fallback={<PageFallback />}><EdmundOverview /></Suspense>} />
+          <Route index element={<Suspense fallback={<PageFallback />}><ToolstizerOverview /></Suspense>} />
+          <Route path="playground" element={<Suspense fallback={<PageFallback />}><BedrockPlayground /></Suspense>} />
+          <Route path="templates" element={<Suspense fallback={<PageFallback />}><PromptTemplateManager /></Suspense>} />
+          <Route path="quality" element={<Suspense fallback={<PageFallback />}><ToolstizerOverview /></Suspense>} />
+          <Route path="pipeline" element={<Suspense fallback={<PageFallback />}><ToolstizerOverview /></Suspense>} />
+          <Route path="merchants" element={<Suspense fallback={<PageFallback />}><ToolstizerOverview /></Suspense>} />
+          <Route path="alerts" element={<Suspense fallback={<PageFallback />}><ToolstizerOverview /></Suspense>} />
         </Route>
 
         {/* Fallback */}

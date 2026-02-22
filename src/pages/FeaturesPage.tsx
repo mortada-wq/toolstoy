@@ -28,8 +28,8 @@ const FEATURES = [
   },
   {
     icon: 'chart',
-    title: 'Edmund — Admin Intelligence',
-    description: 'Merchant health scores. Pipeline monitor. Quality control lab. Know something is wrong before the merchant emails you at 11pm.',
+    title: 'Toolstizer — The Machine Room',
+    description: 'Merchant health scores. Pipeline monitor. Quality control. Toolstizer knows something is wrong before the merchant emails you at 11pm.',
   },
 ]
 
@@ -79,7 +79,7 @@ const IconComponent = ({ icon }: { icon: string }) => {
 
 export function FeaturesPage() {
   return (
-    <div className="bg-white font-inter">
+    <div className="bg-toolstoy-canvas font-inter">
       {/* Hero */}
       <section className="px-4 md:px-6 pt-[80px] md:pt-[120px] pb-12">
         <div className="max-w-[720px] mx-auto text-center">
@@ -131,14 +131,14 @@ export function FeaturesPage() {
       </section>
 
       {/* Bottom CTA */}
-      <section className="px-4 md:px-6 py-12 md:py-20 lg:py-[80px] bg-white">
+      <section className="px-4 md:px-6 py-12 md:py-20 lg:py-[80px] bg-toolstoy-canvas">
         <div className="max-w-[640px] mx-auto text-center">
           <h2 className="text-[26px] md:text-[36px] font-bold text-toolstoy-nearblack">
             Ready to give your products a voice?
           </h2>
           <Link
             to="/signup"
-            className="inline-block mt-8 bg-toolstoy-charcoal text-white font-semibold text-base px-9 py-4 rounded-lg w-full sm:w-auto transition-all duration-200 hover:opacity-90"
+            className="inline-block mt-8 w-fit px-10 py-3.5 bg-toolstoy-charcoal text-white font-semibold text-base rounded-lg transition-all duration-200 hover:opacity-90"
           >
             Start Free — toolstoy.app
           </Link>

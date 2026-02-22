@@ -2,13 +2,13 @@ import { ShowcaseCard, type LayoutType } from './ShowcaseCard'
 import { ScrollReveal } from './ScrollReveal'
 
 const CARDS: { layoutName: LayoutType; characterName: string; productType: string }[] = [
-  { layoutName: 'Side by Side', characterName: 'Character Name', productType: 'Product Type' },
-  { layoutName: 'Character Top', characterName: 'Character Name', productType: 'Product Type' },
-  { layoutName: 'Chat Focus', characterName: 'Character Name', productType: 'Product Type' },
-  { layoutName: 'Mirror', characterName: 'Character Name', productType: 'Product Type' },
-  { layoutName: 'Immersive', characterName: 'Character Name', productType: 'Product Type' },
-  { layoutName: 'Compact', characterName: 'Character Name', productType: 'Product Type' },
-  { layoutName: 'Cinematic', characterName: 'Character Name', productType: 'Product Type' },
+  { layoutName: 'Side by Side', characterName: 'Max', productType: 'Wireless Headphones' },
+  { layoutName: 'Character Top', characterName: 'Luna', productType: 'Skincare Serum' },
+  { layoutName: 'Chat Focus', characterName: 'Atlas', productType: 'Travel Backpack' },
+  { layoutName: 'Mirror', characterName: 'Sage', productType: 'Smart Home Hub' },
+  { layoutName: 'Immersive', characterName: 'Nova', productType: 'Gaming Keyboard' },
+  { layoutName: 'Compact', characterName: 'Finn', productType: 'Coffee Maker' },
+  { layoutName: 'Cinematic', characterName: 'Echo', productType: 'Electric Bike' },
 ]
 
 interface ShowcaseProps {
@@ -17,7 +17,7 @@ interface ShowcaseProps {
 
 export function Showcase({ onCardClick }: ShowcaseProps) {
   return (
-    <section className="px-4 md:px-6 py-16 sm:py-[60px] lg:py-[100px] bg-white">
+    <section id="showcase" className="scroll-mt-20 px-4 md:px-6 py-16 sm:py-[60px] lg:py-[100px] bg-toolstoy-canvas">
       <div className="max-w-[1200px] mx-auto">
         <h2 className="text-[30px] sm:text-[44px] font-normal text-toolstoy-nearblack text-center">
           See It In Action
@@ -26,17 +26,24 @@ export function Showcase({ onCardClick }: ShowcaseProps) {
           Click any character to have a real conversation.
         </p>
 
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
-          {CARDS.map((card, index) => (
-            <ScrollReveal key={card.layoutName} delay={index * 80}>
-              <ShowcaseCard
-                layoutName={card.layoutName}
-                characterName={card.characterName}
-                productType={card.productType}
-                onClick={() => onCardClick(index)}
-              />
-            </ScrollReveal>
-          ))}
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
+          {CARDS.map((card, index) => {
+            const isFeatured = card.layoutName === 'Cinematic' || card.layoutName === 'Immersive'
+            return (
+              <ScrollReveal
+                key={card.layoutName}
+                delay={index * 100}
+                className={isFeatured ? 'lg:col-span-2' : ''}
+              >
+                <ShowcaseCard
+                  layoutName={card.layoutName}
+                  characterName={card.characterName}
+                  productType={card.productType}
+                  onClick={() => onCardClick(index)}
+                />
+              </ScrollReveal>
+            )
+          })}
         </div>
       </div>
     </section>
