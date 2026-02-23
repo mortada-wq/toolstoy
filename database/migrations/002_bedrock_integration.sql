@@ -83,9 +83,15 @@ INSERT INTO prompt_templates (
   variables,
   created_by
 ) VALUES (
-  'Default Character Generation Template',
-  'Create a friendly {CHARACTER_TYPE} character for {PRODUCT_NAME}, a {PRODUCT_TYPE} product. The character should embody these vibes: {VIBE_TAGS}. Use colors inspired by the product: {PRODUCT_COLORS}. The character should be appealing, professional, and suitable for e-commerce.',
-  'Default template for character generation with product context',
+  'Toolstoy Character Studio - Product Expert',
+  'Create a professional AI character that serves as a personal product expert and shopping guide for {PRODUCT_NAME}, a {PRODUCT_TYPE}. This character will interact with customers on e-commerce sites to answer questions and provide advice.
+
+Character Archetype: {CHARACTER_TYPE}
+Personality Vibes: {VIBE_TAGS}
+Visual Style: Use colors inspired by the product ({PRODUCT_COLORS}), clean and professional design suitable for e-commerce widget embedding.
+
+The character should appear trustworthy, approachable, and knowledgeable - designed to assist customers in making informed purchase decisions. Style should be modern, clean, and optimized for web display at various sizes.',
+  'Production template for Toolstoy Character Studio - creates AI product experts that interact with customers',
   true,
   ARRAY['PRODUCT_NAME', 'PRODUCT_TYPE', 'PRODUCT_COLORS', 'CHARACTER_TYPE', 'VIBE_TAGS'],
   'system'

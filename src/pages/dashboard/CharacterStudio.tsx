@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DigitalAlchemy } from '../../components/DigitalAlchemy'
+import { CharacterTypeSelector } from '../../components/CharacterTypeSelector'
 
 // Type definitions
 interface GenerationJob {
@@ -18,6 +19,22 @@ interface CharacterVariation {
   seed: number
   timestamp: string
 }
+
+interface AvatarConfig {
+  faceShape: 'round' | 'oval' | 'square' | 'heart'
+  skinTone: string
+  eyeType: 'round' | 'almond' | 'hooded' | 'upturned'
+  eyeColor: string
+  eyebrowType: 'straight' | 'arched' | 'thick' | 'thin'
+  noseType: 'button' | 'straight' | 'hooked' | 'rounded'
+  mouthType: 'smile' | 'neutral' | 'laugh' | 'serious'
+  hairStyle: 'short' | 'medium' | 'long' | 'bald' | 'buzz'
+  hairColor: string
+  accessory: 'none' | 'glasses' | 'sunglasses' | 'earrings'
+  backgroundColor: string
+}
+
+type CharacterStyleType = 'product-morphing' | 'head-only' | 'avatar'
 
 interface ApiError {
   error: string
@@ -103,6 +120,8 @@ const QA_ITEMS = [
 
 export function CharacterStudio() {
   const [step, setStep] = useState(1)
+  const [characterStyleType, setCharacterStyleType] = useState<CharacterStyleType>('product-morphing')
+  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null)
   const [characterType, setCharacterType] = useState<string | null>('The Expert')
   const [selectedVibes, setSelectedVibes] = useState<string[]>(['Trustworthy'])
   const [charName, setCharName] = useState('Your Character Name')
@@ -236,7 +255,9 @@ export function CharacterStudio() {
         body: JSON.stringify({
           productImage: imageBase64,
           productName,
-          characterType: characterTypeMap[characterType || 'The Expert'],
+          characterStyleType,
+          characterType: characterStyleType === 'avatar' ? 'avatar' : characterTypeMap[characterType || 'The Expert'],
+          avatarConfig: avatarConfig,
           vibeTags: selectedVibes,
         }),
       })
@@ -397,51 +418,67 @@ export function CharacterStudio() {
           </div>
         )}
 
-        {/* Step 2 — Character */}
+        {/* Step 2 — Character Style */}
         {step === 2 && (
-          <div className="max-w-[640px] mx-auto">
+          <div className="max-w-[800px] mx-auto">
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 md:p-10">
-              <h2 className="font-bold text-2xl text-[#1A1A1A]">What kind of character feels right?</h2>
+              <h2 className="font-bold text-2xl text-[#1A1A1A]">Choose Your Character Style</h2>
               <p className="mt-2 text-[15px] text-[#6B7280]">
-                Soul Engine handles the full personality. You just pick the direction.
+                Select how you want your AI character to look and feel.
               </p>
 
-              <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {CHARACTER_TYPES.map((t) => (
-                  <button
-                    key={t.title}
-                    onClick={() => setCharacterType(t.title)}
-                    className={`text-left p-5 rounded-lg border transition-all ${
-                      characterType === t.title
-                        ? 'border-[1.5px] border-[#1A1A1A] bg-[#FAFAFA]'
-                        : 'border border-[#E5E7EB] bg-white hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)]'
-                    }`}
-                  >
-                    <span className="text-[#1A1A1A]">{t.icon}</span>
-                    <h3 className="mt-2.5 font-semibold text-[15px] text-[#1A1A1A]">{t.title}</h3>
-                    <p className="mt-1.5 text-[13px] text-[#6B7280]">{t.description}</p>
-                  </button>
-                ))}
-              </div>
+              <CharacterTypeSelector 
+                onTypeSelect={(type, config) => {
+                  setCharacterStyleType(type)
+                  if (config) {
+                    setAvatarConfig(config)
+                  }
+                }}
+                selectedType={characterStyleType}
+              />
 
-              <div className="mt-6">
-                <label className="block font-semibold text-[13px] text-[#1A1A1A] mb-2">Adjust the vibe</label>
-                <div className="flex flex-wrap gap-2">
-                  {VIBES.map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => toggleVibe(v)}
-                      className={`px-3.5 py-2 rounded-full font-medium text-[13px] transition-all ${
-                        selectedVibes.includes(v)
-                          ? 'bg-[#1A1A1A] text-white'
-                          : 'bg-[#F5F5F5] text-[#6B7280] hover:bg-[#E5E7EB]'
-                      }`}
-                    >
-                      {v}
-                    </button>
-                  ))}
+              {/* Traditional personality options - only show for non-avatar types */}
+              {characterStyleType !== 'avatar' && (
+                <div className="mt-8">
+                  <h3 className="font-semibold text-lg text-[#1A1A1A] mb-4">Character Personality</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {CHARACTER_TYPES.map((t) => (
+                      <button
+                        key={t.title}
+                        onClick={() => setCharacterType(t.title)}
+                        className={`text-left p-5 rounded-lg border transition-all ${
+                          characterType === t.title
+                            ? 'border-[1.5px] border-[#1A1A1A] bg-[#FAFAFA]'
+                            : 'border border-[#E5E7EB] bg-white hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)]'
+                        }`}
+                      >
+                        <span className="text-[#1A1A1A]">{t.icon}</span>
+                        <h3 className="mt-2.5 font-semibold text-[15px] text-[#1A1A1A]">{t.title}</h3>
+                        <p className="mt-1.5 text-[13px] text-[#6B7280]">{t.description}</p>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-6">
+                    <label className="block font-semibold text-[13px] text-[#1A1A1A] mb-2">Adjust vibe</label>
+                    <div className="flex flex-wrap gap-2">
+                      {VIBES.map((v) => (
+                        <button
+                          key={v}
+                          onClick={() => toggleVibe(v)}
+                          className={`px-3.5 py-2 rounded-full font-medium text-[13px] transition-all ${
+                            selectedVibes.includes(v)
+                              ? 'bg-[#1A1A1A] text-white'
+                              : 'bg-[#F5F5F5] text-[#6B7280] hover:bg-[#E5E7EB]'
+                          }`}
+                        >
+                          {v}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="mt-8 flex justify-between">
                 <button onClick={() => setStep(1)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">
@@ -654,7 +691,8 @@ export function CharacterStudio() {
                     {[
                       ['Product', productName],
                       ['Brand', brandName || 'Not specified'],
-                      ['Character Type', characterType || 'The Expert'],
+                      ['Character Style', characterStyleType === 'avatar' ? 'Custom Avatar' : characterStyleType === 'head-only' ? 'Head Only' : 'Product Morphing'],
+                      ['Character Type', characterStyleType === 'avatar' ? 'Avatar' : characterType || 'The Expert'],
                       ['Character Name', charName],
                       ['Vibe Tags', selectedVibes.join(', ')],
                     ].map(([label, value], i) => (
@@ -799,7 +837,7 @@ export function CharacterStudio() {
                       <button
                         onClick={() => {
                           // Show embed code
-                          const embedCode = `<script src="https://cdn.toolstoy.app/widget.js" data-character-id="${selectedCharacter?.id || 'demo'}" async></script>`;
+                          const embedCode = `<script src="https://cdn.toolstoy.app/widget.js" data-character-id="demo" async></script>`;
                           navigator.clipboard.writeText(embedCode);
                           alert('Embed code copied to clipboard!');
                         }}

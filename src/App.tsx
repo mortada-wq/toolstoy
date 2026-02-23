@@ -21,6 +21,9 @@ const WelcomePage = lazy(() => import('./pages/WelcomePage').then((m) => ({ defa
 const InstallGuidePage = lazy(() => import('./pages/docs/InstallGuidePage').then((m) => ({ default: m.InstallGuidePage })))
 const TermsPage = lazy(() => import('./pages/TermsPage').then((m) => ({ default: m.TermsPage })))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })))
+const AcceptableUsePolicyPage = lazy(() => import('./pages/AcceptableUsePolicyPage').then((m) => ({ default: m.AcceptableUsePolicyPage })))
+const SecurityPolicyPage = lazy(() => import('./pages/SecurityPolicyPage').then((m) => ({ default: m.SecurityPolicyPage })))
+const RefundPolicyPage = lazy(() => import('./pages/RefundPolicyPage').then((m) => ({ default: m.RefundPolicyPage })))
 const MerchantDashboard = lazy(() => import('./pages/dashboard/MerchantDashboard').then((m) => ({ default: m.MerchantDashboard })))
 const CharacterStudio = lazy(() => import('./pages/dashboard/CharacterStudio').then((m) => ({ default: m.CharacterStudio })))
 const MyCharacters = lazy(() => import('./pages/dashboard/MyCharacters').then((m) => ({ default: m.MyCharacters })))
@@ -63,6 +66,9 @@ function App() {
           <Route path="/docs/install/:platform" element={<Suspense fallback={<PageFallback />}><InstallGuidePage /></Suspense>} />
           <Route path="/terms" element={<Suspense fallback={<PageFallback />}><TermsPage /></Suspense>} />
           <Route path="/privacy" element={<Suspense fallback={<PageFallback />}><PrivacyPage /></Suspense>} />
+          <Route path="/acceptable-use" element={<Suspense fallback={<PageFallback />}><AcceptableUsePolicyPage /></Suspense>} />
+          <Route path="/security" element={<Suspense fallback={<PageFallback />}><SecurityPolicyPage /></Suspense>} />
+          <Route path="/refunds" element={<Suspense fallback={<PageFallback />}><RefundPolicyPage /></Suspense>} />
         </Route>
 
         {/* Welcome flow — first login */}

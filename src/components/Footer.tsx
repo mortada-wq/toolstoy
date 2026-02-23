@@ -6,7 +6,14 @@ export function Footer() {
     { label: 'Features', href: '/features' },
     { label: 'Pricing', href: '/pricing' },
     { label: 'Docs', href: '#' },
+    { label: 'Terms', href: '/terms' },
     { label: 'Privacy', href: '/privacy' },
+  ]
+
+  const legalLinks = [
+    { label: 'Acceptable Use', href: '/acceptable-use' },
+    { label: 'Security', href: '/security' },
+    { label: 'Refunds', href: '/refunds' },
   ]
 
   return (
@@ -21,9 +28,22 @@ export function Footer() {
           />
         </Link>
 
-        {/* Links */}
+        {/* Main Links */}
         <nav className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
           {links.map((link) => (
+            <Link
+              key={link.label}
+              to={link.href}
+              className="text-[#6B7280] text-sm font-normal hover:text-white transition-all duration-200"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Legal Links */}
+        <nav className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
+          {legalLinks.map((link) => (
             <Link
               key={link.label}
               to={link.href}
