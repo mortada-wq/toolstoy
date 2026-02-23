@@ -61,7 +61,7 @@ interface EmotionalStatesListProps {
  * Emotional states list component
  */
 export const EmotionalStatesList: React.FC<EmotionalStatesListProps> = ({
-  characterId,
+  _characterId,
   prompts,
   selectedEmotion,
   onSelectEmotion,
@@ -111,7 +111,7 @@ interface PromptEditorProps {
  * Prompt editor component
  */
 export const PromptEditor: React.FC<PromptEditorProps> = ({
-  characterId,
+  _characterId,
   emotion,
   prompt,
   onSave,
@@ -275,7 +275,7 @@ interface PreviewModalProps {
 /**
  * Preview modal component
  */
-export const PreviewModal: React.FC<PreviewModalProps> = ({ previewId, status, videoUrl, error, onClose }) => {
+export const PreviewModal: React.FC<PreviewModalProps> = ({ _previewId, status, videoUrl, error, onClose }) => {
   return (
     <div className="preview-modal">
       <div className="modal-content">

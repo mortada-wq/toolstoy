@@ -58,7 +58,7 @@ function getAdminRole(email: string): AdminRole {
   return null
 }
 
-function isAdminEmail(email: string): boolean {
+function _isAdminEmail(email: string): boolean {
   return getAdminRole(email) !== null
 }
 

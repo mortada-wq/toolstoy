@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { SubscriptionTier, getStatesForTier, getStateNamesForTier } from '../../amplify/functions/soul-engine/animation-states';
+import { SubscriptionTier, getStateNamesForTier } from '../../amplify/functions/soul-engine/animation-states';
 
 // ============================================================================
 // TypeScript Interfaces
@@ -163,11 +163,6 @@ const CharacterWidget: React.FC<CharacterWidgetProps> = ({
     // Preload videos
     preloadVideos(states);
   }, [config.subscriptionTier, config.videoStates]);
-
-  useEffect(() => {
-    // Apply CSS custom properties
-    applyCSSVariables();
-  }, [applyCSSVariables]);
 
   useEffect(() => {
     // Notify parent of state changes
@@ -376,6 +371,11 @@ const CharacterWidget: React.FC<CharacterWidgetProps> = ({
     console.log('Applied character theme with primary color:', primaryColor);
   }, [config.imageUrl, extractDominantColor]);
 
+  useEffect(() => {
+    // Apply CSS custom properties when component mounts or config changes
+    applyCSSVariables();
+  }, [applyCSSVariables]);
+
   const preloadVideos = async (states: string[]) => {
     try {
       setWidgetState(prev => ({ ...prev, isPreloading: true }));
@@ -409,8 +409,8 @@ const CharacterWidget: React.FC<CharacterWidgetProps> = ({
             resolve();
           };
           
-          const handleError = (error: Event) => {
-            console.warn(`Failed to preload video for state: ${state}:`, error);
+          const handleError = (_error: Event | string) => {
+            console.warn(`Failed to preload video for state: ${state}`);
             // Create a fallback video element with error handling
             const fallbackVideo = document.createElement('video');
             fallbackVideo.muted = true;
@@ -599,11 +599,11 @@ const CharacterWidget: React.FC<CharacterWidgetProps> = ({
     }
   }, [availableStates, changeAnimationState]);
 
-  const triggerGreeting = useCallback(() => {
+  const _triggerGreeting = useCallback(() => {
     changeAnimationState('greeting');
   }, [changeAnimationState]);
 
-  const triggerFarewell = useCallback(() => {
+  const _triggerFarewell = useCallback(() => {
     if (availableStates.includes('farewell')) {
       changeAnimationState('farewell');
     }
@@ -632,7 +632,7 @@ const CharacterWidget: React.FC<CharacterWidgetProps> = ({
     }
   }, [triggerHappy]);
 
-  const updateConfidence = useCallback((score: number) => {
+  const _updateConfidence = useCallback((score: number) => {
     setWidgetState(prev => ({ ...prev, confidenceScore: score }));
     
     // Trigger confused state for low confidence
@@ -949,8 +949,7 @@ const CharacterWidget: React.FC<CharacterWidgetProps> = ({
       capabilities.visual?.showImage || 
       capabilities.visual?.playVideo ||
       capabilities.audio?.soundEffects ||
-      capabilities.audio?.ambientMusic ||
-      capabilities.spatial?.rotate3D;
+      capabilities.audio?.ambientMusic;
 
     if (!hasSpecialCapabilities) return null;
 

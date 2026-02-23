@@ -70,9 +70,8 @@ export class PromptExportImportService {
     }
 
     // Format data
-    let fileContent: string;
     if (format === 'json') {
-      fileContent = JSON.stringify(
+      JSON.stringify(
         {
           export_date: new Date().toISOString(),
           prompts,
@@ -83,9 +82,7 @@ export class PromptExportImportService {
       );
     } else {
       // CSV format
-      const headers = ['character_id', 'emotion', 'prompt_text', 'version'];
-      const rows = prompts.map(p => [p.character_id, p.emotion, `"${p.prompt_text}"`, p.version]);
-      fileContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      prompts.map(p => [p.character_id, p.emotion, `"${p.prompt_text}"`, p.version]);
     }
 
     // In a real implementation, this would upload to S3 and return a URL
@@ -312,7 +309,7 @@ export class PromptExportImportService {
   /**
    * Resolve conflicts
    */
-  async resolveConflicts(conflicts: Conflict[], resolution: 'overwrite' | 'skip' | 'merge'): Promise<void> {
+  async resolveConflicts(_conflicts: Conflict[], _resolution: 'overwrite' | 'skip' | 'merge'): Promise<void> {
     // Implementation would handle conflict resolution
     // For now, this is a placeholder
   }

@@ -36,15 +36,15 @@ interface ApiError {
   cooldownRemaining?: number
 }
 
-const IMAGE_MODELS = [
+const _IMAGE_MODELS = [
   { id: 'titan', name: 'Amazon Titan Image Generator', cost: '$0.008' },
 ]
 
-const VIDEO_MODELS = [
+const _VIDEO_MODELS = [
   { id: 'nova-canvas', name: 'Amazon Nova Canvas', cost: '$0.05', duration: '6 sec' },
 ]
 
-const ANIMATION_STATES = [
+const _ANIMATION_STATES = [
   { id: 'idle', name: 'Idle' },
   { id: 'talking', name: 'Talking' },
   { id: 'thinking', name: 'Thinking' },
@@ -53,11 +53,11 @@ const ANIMATION_STATES = [
 
 export function BedrockPlayground() {
   const [environment, setEnvironment] = useState<Environment>('test')
-  const [generationType, setGenerationType] = useState<GenerationType>('image')
-  const [imageModel, setImageModel] = useState('titan')
-  const [videoModel, setVideoModel] = useState<VideoModel>('nova-canvas')
-  const [selectedStates, setSelectedStates] = useState<string[]>(['idle'])
-  const [prompt, setPrompt] = useState('')
+  const [_generationType, _setGenerationType] = useState<GenerationType>('image')
+  const [_imageModel, _setImageModel] = useState('titan')
+  const [_videoModel, _setVideoModel] = useState<VideoModel>('nova-canvas')
+  const [_selectedStates, _setSelectedStates] = useState<string[]>(['idle'])
+  const [_prompt, _setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [imageVariations, setImageVariations] = useState<ImageVariation[]>([])
   const [selectedVariation, setSelectedVariation] = useState<string | null>(null)
@@ -68,10 +68,10 @@ export function BedrockPlayground() {
   const [productImage, setProductImage] = useState<File | null>(null)
   const [productImagePreview, setProductImagePreview] = useState<string | null>(null)
   const [productName, setProductName] = useState('')
-  const [characterType, setCharacterType] = useState<'mascot' | 'spokesperson' | 'sidekick' | 'expert'>('mascot')
-  const [vibeTags, setVibeTags] = useState<string[]>(['friendly', 'professional'])
+  const [_characterType, _setCharacterType] = useState<'mascot' | 'spokesperson' | 'sidekick' | 'expert'>('mascot')
+  const [_vibeTags, _setVibeTags] = useState<string[]>(['friendly', 'professional'])
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
-  const [selectedAsset, setSelectedAsset] = useState<any>(null)
+  const [_selectedAsset, _setSelectedAsset] = useState<any>(null)
   const [showHistory, setShowHistory] = useState(false)
 
   const addLog = (message: string) => {
@@ -137,8 +137,8 @@ export function BedrockPlayground() {
         body: JSON.stringify({
           productImage: imageBase64,
           productName,
-          characterType,
-          vibeTags,
+          characterType: 'mascot',
+          vibeTags: ['friendly', 'professional'],
         }),
       })
 
@@ -242,7 +242,7 @@ export function BedrockPlayground() {
       setCurrentJob({
         jobId: response.jobId,
         status: 'processing',
-        totalStates: selectedStates.length,
+        totalStates: 4,
         statesGenerated: [],
       })
       
@@ -436,7 +436,7 @@ export function BedrockPlayground() {
             <AssetUploadPanel folderId={selectedFolderId} onUploadComplete={() => {}} />
             <div className="flex-1 overflow-y-auto border-t border-[#E5E7EB]">
               <AssetPreviewPanel 
-                asset={selectedAsset}
+                asset={null}
                 onUseInGeneration={(url) => {
                   setProductImagePreview(url)
                   addLog(`✓ Asset loaded: ${url}`)

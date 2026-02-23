@@ -136,7 +136,7 @@ describe('EmotionalPromptsService', () => {
 
       mockPool.query.mockResolvedValueOnce({ rows: [{ prompt_text: 'New prompt' }] });
 
-      const result = await service.updatePrompt('char-123', 'idle', 'New prompt', 'admin');
+      await service.updatePrompt('char-123', 'idle', 'New prompt', 'admin');
 
       expect(mockClient.query).toHaveBeenCalledWith('BEGIN');
       expect(mockClient.query).toHaveBeenCalledWith('COMMIT');

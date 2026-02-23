@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import CharacterWidget, { CharacterConfig } from '../../components/CharacterWidget';
-import { SubscriptionTier } from '../../amplify/functions/soul-engine/animation-states';
+import { SubscriptionTier } from '../../../amplify/functions/soul-engine/animation-states';
 
 const WidgetDemo: React.FC = () => {
   const [widgetState, setWidgetState] = useState<any>(null);

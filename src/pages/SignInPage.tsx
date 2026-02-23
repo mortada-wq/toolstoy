@@ -56,7 +56,7 @@ export function SignInPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center bg-[#F5F5F5] py-12 font-inter">
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5] font-inter">
       <div className="bg-white rounded-lg p-8 md:p-12 w-[92vw] md:w-[440px] shadow-toolstoy max-w-[440px]">
         <div className="flex justify-center mb-8">
           <div className="bg-toolstoy-charcoal rounded-lg px-5 py-3">

@@ -6,10 +6,27 @@ import { query, queryOne } from '../soul-engine/database'
 // TypeScript Interfaces
 // ============================================================================
 
+interface AvatarConfig {
+  faceShape: string
+  skinTone: string
+  eyeType: string
+  eyeColor: string
+  eyebrowType: string
+  noseType: string
+  mouthType: string
+  hairStyle: string
+  hairColor: string
+  accessory: string
+  backgroundColor: string
+}
+
 interface GenerateCharacterRequest {
   productImage: string // Base64 or URL
   productName: string
-  characterType: 'mascot' | 'spokesperson' | 'sidekick' | 'expert'
+  characterType: 'mascot' | 'spokesperson' | 'sidekick' | 'expert' | 'avatar'
+  characterStyleType?: 'product-morphing' | 'head-only' | 'avatar'
+  generationType?: 'tools' | 'genius-avatar' | 'head-only'
+  avatarConfig?: AvatarConfig
   vibeTags: string[]
   merchantId: string
 }
@@ -83,9 +100,14 @@ function validateGenerateCharacterRequest(body: Record<string, unknown>): string
   if (!body.characterType || typeof body.characterType !== 'string') {
     return 'characterType is required and must be a string'
   }
-  const validTypes = ['mascot', 'spokesperson', 'sidekick', 'expert']
+  const validTypes = ['mascot', 'spokesperson', 'sidekick', 'expert', 'avatar']
   if (!validTypes.includes(body.characterType as string)) {
     return `characterType must be one of: ${validTypes.join(', ')}`
+  }
+  if (body.characterType === 'avatar') {
+    if (!body.avatarConfig || typeof body.avatarConfig !== 'object') {
+      return 'avatarConfig is required when characterType is avatar'
+    }
   }
   if (!Array.isArray(body.vibeTags)) {
     return 'vibeTags is required and must be an array'
@@ -204,7 +226,10 @@ const handler: APIGatewayProxyHandlerV2 = async (event) => {
       const request: GenerateCharacterRequest = {
         productImage: body.productImage as string,
         productName: body.productName as string,
-        characterType: body.characterType as 'mascot' | 'spokesperson' | 'sidekick' | 'expert',
+        characterType: body.characterType as GenerateCharacterRequest['characterType'],
+        characterStyleType: body.characterStyleType as GenerateCharacterRequest['characterStyleType'],
+        generationType: body.generationType as GenerateCharacterRequest['generationType'],
+        avatarConfig: body.avatarConfig as GenerateCharacterRequest['avatarConfig'],
         vibeTags: body.vibeTags as string[],
         merchantId: sub,
       }

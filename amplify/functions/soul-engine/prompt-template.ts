@@ -299,3 +299,91 @@ export function formatVibeTags(tags: string[]): string {
 export function formatCharacterType(type: string): string {
   return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
 }
+
+/**
+ * Avatar config shape for custom avatar generation.
+ */
+export interface AvatarConfig {
+  faceShape: string
+  skinTone: string
+  eyeType: string
+  eyeColor: string
+  eyebrowType: string
+  noseType: string
+  mouthType: string
+  hairStyle: string
+  hairColor: string
+  accessory: string
+  backgroundColor: string
+}
+
+const SKIN_TONE_NAMES: Record<string, string> = {
+  '#FDBCB4': 'light',
+  '#F1C27D': 'medium-light',
+  '#E0AC69': 'medium',
+  '#C68642': 'medium-dark',
+  '#8D5524': 'dark',
+}
+
+const EYE_COLOR_NAMES: Record<string, string> = {
+  '#8B4513': 'brown',
+  '#1E90FF': 'blue',
+  '#228B22': 'green',
+  '#8B7355': 'hazel',
+  '#808080': 'gray',
+}
+
+const HAIR_COLOR_NAMES: Record<string, string> = {
+  '#000000': 'black',
+  '#4B3621': 'brown',
+  '#F5DEB3': 'blonde',
+  '#8B4513': 'red',
+  '#708090': 'gray',
+  '#F5F5F5': 'white',
+}
+
+const FACE_SHAPE_LABELS: Record<string, string> = {
+  round: 'balanced round face',
+  oval: 'classic oval face',
+  square: 'strong angular face',
+  heart: 'refined heart-shaped face',
+}
+
+const MOUTH_LABELS: Record<string, string> = {
+  smile: 'warm approachable smile',
+  neutral: 'composed neutral expression',
+  laugh: 'friendly cheerful expression',
+  serious: 'confident professional expression',
+}
+
+/**
+ * Formats avatar config into a natural-language description for image generation.
+ * Uses professional design terminology for premium, brand-ready output.
+ *
+ * @param config - Avatar configuration from the customizer
+ * @returns Human-readable avatar description for prompt
+ */
+export function formatAvatarConfig(config: AvatarConfig): string {
+  const skin = SKIN_TONE_NAMES[config.skinTone] || 'neutral'
+  const faceShape = FACE_SHAPE_LABELS[config.faceShape] || config.faceShape
+  const hairStyle = config.hairStyle === 'bald' ? 'clean-shaven bald' : `${config.hairStyle} hair`
+  const hairColor = HAIR_COLOR_NAMES[config.hairColor] || config.hairColor
+  const eyes = `${config.eyeType} ${EYE_COLOR_NAMES[config.eyeColor] || config.eyeColor} eyes`
+  const eyebrows = `${config.eyebrowType} eyebrows`
+  const nose = `${config.noseType} nose`
+  const mouth = MOUTH_LABELS[config.mouthType] || config.mouthType
+  const accessory = config.accessory !== 'none' ? `subtle ${config.accessory}` : 'minimal accessories'
+
+  const parts = [
+    faceShape,
+    `${skin} skin tone`,
+    hairStyle === 'clean-shaven bald' ? hairStyle : `${hairStyle} in ${hairColor}`,
+    eyes,
+    eyebrows,
+    nose,
+    mouth,
+    accessory,
+  ]
+
+  return parts.join(', ')
+}

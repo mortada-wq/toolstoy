@@ -145,6 +145,8 @@ export function CharacterStudio() {
   const [estimatedTime, setEstimatedTime] = useState<number>(0)
   const [generationComplete, setGenerationComplete] = useState(false)
   const [availableStates, setAvailableStates] = useState<string[]>([])
+  const [showGenerationTypeModal, setShowGenerationTypeModal] = useState(false)
+  const [_selectedGenerationType, _setSelectedGenerationType] = useState<'tools' | 'genius-avatar' | 'head-only' | null>(null)
 
   const toggleVibe = (v: string) => {
     setSelectedVibes((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]))
@@ -220,7 +222,7 @@ export function CharacterStudio() {
   }
 
   // Handle character generation
-  const handleGenerate = async () => {
+  const handleGenerate = () => {
     if (!productImage || !productName) {
       setError({
         error: 'VALIDATION_ERROR',
@@ -228,7 +230,14 @@ export function CharacterStudio() {
       })
       return
     }
+    
+    // Show the generation type selection modal
+    setShowGenerationTypeModal(true)
+  }
 
+  const handleGenerateWithType = async (generationType: 'tools' | 'genius-avatar' | 'head-only') => {
+    _setSelectedGenerationType(generationType)
+    setShowGenerationTypeModal(false)
     setGenerating(true)
     setError(null)
     setVariations([])
@@ -236,7 +245,7 @@ export function CharacterStudio() {
     setProgressStep(1)
 
     try {
-      const imageBase64 = await convertImageToBase64(productImage)
+      const imageBase64 = await convertImageToBase64(productImage!)
       
       // Map character type to API format
       const characterTypeMap: Record<string, 'mascot' | 'spokesperson' | 'sidekick' | 'expert'> = {
@@ -255,6 +264,7 @@ export function CharacterStudio() {
         body: JSON.stringify({
           productImage: imageBase64,
           productName,
+          generationType,
           characterStyleType,
           characterType: characterStyleType === 'avatar' ? 'avatar' : characterTypeMap[characterType || 'The Expert'],
           avatarConfig: avatarConfig,
@@ -297,10 +307,55 @@ export function CharacterStudio() {
   }
 
   return (
-    <div className="bg-[#F5F5F5] min-h-full">
-      {/* Step indicator */}
-      <div className="bg-white border-b border-[#E5E7EB] px-4 md:px-8 py-5">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
+    <>
+      {showGenerationTypeModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-2xl w-full mx-4">
+            <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">Choose Your Character Type</h2>
+            <p className="text-[#6B7280] mb-6">Select how you'd like your character to be generated:</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <button
+                onClick={() => handleGenerateWithType('tools')}
+                className="p-6 border-2 border-[#E5E7EB] rounded-lg hover:border-[#5B7C99] hover:bg-[#F9FAFB] transition-all text-left"
+              >
+                <div className="text-3xl mb-2">🛠️</div>
+                <h3 className="font-semibold text-[#1A1A1A] mb-1">The Tools</h3>
+                <p className="text-sm text-[#6B7280]">Expert, Entertainer, Advisor, or Enthusiast character types</p>
+              </button>
+              
+              <button
+                onClick={() => handleGenerateWithType('genius-avatar')}
+                className="p-6 border-2 border-[#E5E7EB] rounded-lg hover:border-[#5B7C99] hover:bg-[#F9FAFB] transition-all text-left"
+              >
+                <div className="text-3xl mb-2">🧠</div>
+                <h3 className="font-semibold text-[#1A1A1A] mb-1">Genius Avatar</h3>
+                <p className="text-sm text-[#6B7280]">Full-body animated character with advanced AI</p>
+              </button>
+              
+              <button
+                onClick={() => handleGenerateWithType('head-only')}
+                className="p-6 border-2 border-[#E5E7EB] rounded-lg hover:border-[#5B7C99] hover:bg-[#F9FAFB] transition-all text-left"
+              >
+                <div className="text-3xl mb-2">👤</div>
+                <h3 className="font-semibold text-[#1A1A1A] mb-1">Head Only</h3>
+                <p className="text-sm text-[#6B7280]">Animated head and shoulders character</p>
+              </button>
+            </div>
+            
+            <button
+              onClick={() => setShowGenerationTypeModal(false)}
+              className="w-full py-2 px-4 border border-[#E5E7EB] rounded-lg text-[#6B7280] hover:bg-[#F9FAFB] transition-all"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="bg-[#F5F5F5] min-h-full">
+        {/* Step indicator */}
+        <div className="bg-white border-b border-[#E5E7EB] px-4 md:px-8 py-5">
+          <div className="flex items-center justify-between max-w-2xl mx-auto">
           {STEPS.map((s, i) => (
             <div key={s.num} className="flex items-center flex-1">
               <div className="flex flex-col items-center">
@@ -332,11 +387,11 @@ export function CharacterStudio() {
               )}
             </div>
           ))}
+          </div>
         </div>
-      </div>
 
-      {/* Step content */}
-      <div className="p-6 md:p-12">
+        {/* Step content */}
+        <div className="p-6 md:p-12">
         {/* Step 1 — Product */}
         {step === 1 && (
           <div className="max-w-[640px] mx-auto">
@@ -354,7 +409,7 @@ export function CharacterStudio() {
                   Product Image *
                 </label>
                 {!productImagePreview ? (
-                  <label className="block cursor-pointer">
+                  <label htmlFor="product-image-upload" className="block cursor-pointer">
                     <div className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-12 bg-[#FAFAFA] text-center hover:border-[#5B7C99] transition-all">
                       <svg className="w-10 h-10 mx-auto text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -362,7 +417,13 @@ export function CharacterStudio() {
                       <p className="mt-3 font-medium text-[16px] text-[#1A1A1A]">Drop your product image here</p>
                       <p className="text-[14px] text-[#6B7280] font-normal mt-1">or click to browse — JPG, PNG up to 10MB</p>
                     </div>
-                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                    <input 
+                      id="product-image-upload"
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleImageUpload} 
+                      className="hidden" 
+                    />
                   </label>
                 ) : (
                   <div className="relative border-2 border-[#5B7C99] rounded-lg p-4 bg-white">
@@ -861,7 +922,8 @@ export function CharacterStudio() {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   )
 }

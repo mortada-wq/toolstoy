@@ -5,7 +5,9 @@ import {
   processTemplate,
   formatColors,
   formatVibeTags,
+  formatAvatarConfig,
   type TemplateVariables,
+  type AvatarConfig,
 } from './prompt-template'
 import {
   generateImageVariations,
@@ -36,7 +38,10 @@ import { query, queryOne } from './database'
 interface GenerateCharacterRequest {
   productImage: string // Base64 or URL
   productName: string
-  characterType: 'mascot' | 'spokesperson' | 'sidekick' | 'expert'
+  characterType: 'mascot' | 'spokesperson' | 'sidekick' | 'expert' | 'avatar'
+  characterStyleType?: 'product-morphing' | 'head-only' | 'avatar'
+  generationType?: 'tools' | 'genius-avatar' | 'head-only'
+  avatarConfig?: AvatarConfig
   vibeTags: string[]
   merchantId: string
 }
@@ -141,36 +146,44 @@ async function handleGenerateCharacterVariations(
     )
     console.log(`[${jobId}] Created generation job record`)
     
-    // Step 2: Retrieve and process active prompt template
-    console.log(`[${jobId}] Retrieving active prompt template...`)
-    const template = await retrieveActivePromptTemplate()
-    console.log(`[${jobId}] Retrieved template: ${template.name} (v${template.version})`)
-    
-    // Step 3: Analyze product image for colors and category
-    console.log(`[${jobId}] Analyzing product image...`)
-    const imageAnalysis: ImageAnalysisResult = await analyzeImage(request.productImage)
-    console.log(`[${jobId}] Image analysis complete:`, {
-      category: imageAnalysis.category,
-      colorCount: imageAnalysis.dominantColors.length,
-    })
-    
-    // Step 4: Process template with analyzed data
-    const templateVariables: TemplateVariables = {
-      productName: request.productName,
-      characterType: request.characterType,
-      productCategory: imageAnalysis.category,
-      dominantColors: formatColors(imageAnalysis.dominantColors),
-      vibeTags: formatVibeTags(request.vibeTags),
+    // Step 2: Build image generation prompt (avatar config vs template)
+    let finalPrompt: string
+    let negativePrompt: string
+
+    if (request.avatarConfig) {
+      // Avatar mode: build prompt from avatar customization (premium, brand-ready output)
+      const avatarDescription = formatAvatarConfig(request.avatarConfig)
+      const vibeStr = formatVibeTags(request.vibeTags)
+      finalPrompt = `Premium illustrated character design for e-commerce. Professional brand mascot style. Appearance: ${avatarDescription}. Art direction: polished vector illustration, clean lines, consistent lighting, high-fidelity detail. Suitable for corporate and retail use. Personality: ${vibeStr}. Product context: ${request.productName}.`
+      negativePrompt = 'blurry, low quality, distorted, deformed, amateur, childish, meme, cartoonish exaggeration, text, watermark, logo, realistic photo, multiple characters, cropped, out of frame, unprofessional, cheap'
+      console.log(`[${jobId}] Using avatar config prompt (${finalPrompt.length} chars)`)
+    } else {
+      // Product morphing / head-only: use template
+      const template = await retrieveActivePromptTemplate()
+      console.log(`[${jobId}] Retrieved template: ${template.name} (v${(template as { version?: number }).version})`)
+      const imageAnalysis: ImageAnalysisResult = await analyzeImage(request.productImage)
+      console.log(`[${jobId}] Image analysis complete:`, {
+        category: imageAnalysis.category,
+        colorCount: imageAnalysis.dominantColors.length,
+      })
+      const templateVariables: TemplateVariables = {
+        productName: request.productName,
+        characterType: request.characterType,
+        productCategory: imageAnalysis.category,
+        dominantColors: formatColors(imageAnalysis.dominantColors),
+        vibeTags: formatVibeTags(request.vibeTags),
+      }
+      const processed = processTemplate(template, templateVariables)
+      finalPrompt = processed.prompt
+      negativePrompt = processed.negativePrompt
+      console.log(`[${jobId}] Processed prompt template (${finalPrompt.length} chars)`)
     }
-    
-    const processedPrompt = processTemplate(template.template, templateVariables)
-    console.log(`[${jobId}] Processed prompt template (${processedPrompt.length} chars)`)
-    
+
     // Step 5: Generate 3 image variations with unique seeds
     console.log(`[${jobId}] Generating 3 image variations...`)
     const imageVariations: ImageVariation[] = await generateImageVariations(
-      processedPrompt,
-      3 // Generate 3 variations
+      finalPrompt,
+      negativePrompt
     )
     console.log(`[${jobId}] Generated ${imageVariations.length} variations`)
     

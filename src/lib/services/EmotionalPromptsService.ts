@@ -65,7 +65,7 @@ export class EmotionalPromptsService {
       [characterId]
     );
 
-    const prompts = result.rows.map(row => ({
+    const prompts = result.rows.map((row: any) => ({
       id: row.id || uuidv4(),
       character_id: characterId,
       emotion: row.emotion,

@@ -15,6 +15,20 @@ interface AvatarConfig {
   backgroundColor: string
 }
 
+const DEFAULT_AVATAR_CONFIG: AvatarConfig = {
+  faceShape: 'round',
+  skinTone: '#FDBCB4',
+  eyeType: 'round',
+  eyeColor: '#8B4513',
+  eyebrowType: 'straight',
+  noseType: 'button',
+  mouthType: 'smile',
+  hairStyle: 'short',
+  hairColor: '#000000',
+  accessory: 'none',
+  backgroundColor: '#3B82F6',
+}
+
 type CharacterType = 'product-morphing' | 'head-only' | 'avatar'
 
 interface CharacterTypeSelectorProps {
@@ -69,19 +83,22 @@ export function CharacterTypeSelector({ onTypeSelect, selectedType }: CharacterT
     {
       id: 'avatar' as CharacterType,
       title: 'Custom Avatar',
-      description: 'WhatsApp-style personalized avatar',
+      description: 'Premium brand-ready character',
       icon: <AvatarIcon />,
-      details: 'Fully customizable avatar with deep personalization'
+      details: 'Professional illustrated avatar tailored to your brand'
     }
   ]
 
   const handleAvatarChange = (config: AvatarConfig) => {
     setAvatarConfig(config)
+    onTypeSelect('avatar', config) // Keep parent in sync for generation
   }
 
   const handleTypeSelect = (type: CharacterType) => {
-    if (type === 'avatar' && avatarConfig) {
-      onTypeSelect(type, avatarConfig)
+    if (type === 'avatar') {
+      const config = avatarConfig ?? DEFAULT_AVATAR_CONFIG
+      setAvatarConfig(config)
+      onTypeSelect(type, config)
     } else {
       onTypeSelect(type)
     }
@@ -97,15 +114,10 @@ export function CharacterTypeSelector({ onTypeSelect, selectedType }: CharacterT
             <button
               key={type.id}
               onClick={() => handleTypeSelect(type.id)}
-              disabled={type.id === 'avatar' && !avatarConfig}
-              className={`p-6 rounded-lg border-2 transition-all ${
+              className={`p-6 rounded-lg border-2 transition-all cursor-pointer ${
                 selectedType === type.id
                   ? 'border-blue-500 bg-blue-50'
                   : 'border-gray-200 hover:border-gray-300 bg-white'
-              } ${
-                type.id === 'avatar' && !avatarConfig
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'cursor-pointer'
               }`}
             >
               <div className="flex flex-col items-center text-center space-y-3">
@@ -127,14 +139,14 @@ export function CharacterTypeSelector({ onTypeSelect, selectedType }: CharacterT
 
       {/* Avatar Customizer - Only show when avatar is selected */}
       {selectedType === 'avatar' && (
-        <div className="bg-gray-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Customize Your Avatar</h3>
+        <div className="bg-slate-50 rounded-xl p-6 border border-slate-200/60">
+          <h3 className="text-lg font-semibold text-slate-900 mb-1">Design Your Character</h3>
+          <p className="text-sm text-slate-600 mb-4">Create a professional, brand-ready avatar for your e-commerce assistant.</p>
           <AvatarCustomizer onAvatarChange={handleAvatarChange} />
           
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <strong>Tip:</strong> Customize your avatar to match your brand personality. 
-              The avatar will be used as your AI character's appearance in the chat widget.
+          <div className="mt-6 p-4 bg-slate-100/80 border border-slate-200 rounded-lg">
+            <p className="text-sm text-slate-700">
+              <strong>Professional output:</strong> Your avatar will be generated as a polished, high-fidelity illustration suitable for corporate and retail use.
             </p>
           </div>
         </div>

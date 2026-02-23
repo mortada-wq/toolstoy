@@ -51,8 +51,8 @@ export function PromptTemplateManager() {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null)
+  const [_isLoading, _setIsLoading] = useState(true)
+  const [_activeTemplateId, _setActiveTemplateId] = useState<string | null>(null)
 
   // Load templates on mount
   useEffect(() => {
@@ -60,7 +60,7 @@ export function PromptTemplateManager() {
   }, [])
 
   const loadTemplates = async () => {
-    setIsLoading(true)
+    _setIsLoading(true)
     try {
       // TODO: Implement API call to fetch templates
       // const response = await fetch('/api/prompt-templates')
@@ -72,7 +72,7 @@ export function PromptTemplateManager() {
     } catch (err) {
       console.error('Failed to load templates:', err)
     } finally {
-      setIsLoading(false)
+      _setIsLoading(false)
     }
   }
 
@@ -127,7 +127,7 @@ export function PromptTemplateManager() {
       // TODO: Call API to activate template
       // await fetch(`/api/prompt-templates/${templateId}/activate`, { method: 'POST' })
       
-      setActiveTemplateId(templateId)
+      _setActiveTemplateId(templateId)
       loadTemplates()
     } catch (err) {
       alert('Failed to activate template')

@@ -38,7 +38,7 @@ export function createEmotionalPromptsRouter(pool: Pool): Router {
   router.post('/:id/emotional-prompts/:emotion', requireAdmin, async (req: Request, res: Response) => {
     try {
       const { id, emotion } = req.params;
-      const { prompt_text, change_reason } = req.body;
+      const { prompt_text } = req.body;
       const userId = (req as any).user?.id || 'system';
 
       if (!prompt_text) {
@@ -59,7 +59,7 @@ export function createEmotionalPromptsRouter(pool: Pool): Router {
   router.put('/:id/emotional-prompts/:emotion', requireAdmin, async (req: Request, res: Response) => {
     try {
       const { id, emotion } = req.params;
-      const { prompt_text, change_reason } = req.body;
+      const { prompt_text } = req.body;
       const userId = (req as any).user?.id || 'system';
 
       if (!prompt_text) {

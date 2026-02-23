@@ -160,7 +160,7 @@ export class StagingEnvironmentManager {
   /**
    * Verify admin access
    */
-  async verifyAdminAccess(userId: string): Promise<boolean> {
+  async verifyAdminAccess(_userId: string): Promise<boolean> {
     // This would check against your admin user table
     // For now, return true - implement based on your auth system
     return true;
@@ -174,7 +174,7 @@ export class StagingEnvironmentManager {
     const config = await this.getConfiguration();
 
     // Create sync history record
-    const result = await this.pool.query(
+    await this.pool.query(
       `INSERT INTO data_sync_history 
        (sync_id, environment, status, anonymization_applied, initiated_by)
        VALUES ($1, $2, $3, $4, $5)

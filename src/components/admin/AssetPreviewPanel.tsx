@@ -45,7 +45,7 @@ export function AssetPreviewPanel({ asset, onDelete, onUseInGeneration }: AssetP
     })
   }
 
-  const getFileSize = (url: string) => {
+  const _getFileSize = (_url: string) => {
     // This is a placeholder - actual size would come from server
     return 'N/A'
   }
