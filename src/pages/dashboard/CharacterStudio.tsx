@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DigitalAlchemy } from '../../components/DigitalAlchemy'
-import { CharacterTypeSelector } from '../../components/CharacterTypeSelector'
 import { AvatarCustomizer } from '../../components/AvatarCustomizer'
 
 // Type definitions

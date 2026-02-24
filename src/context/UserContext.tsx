@@ -58,10 +58,6 @@ function getAdminRole(email: string): AdminRole {
   return null
 }
 
-function _isAdminEmail(email: string): boolean {
-  return getAdminRole(email) !== null
-}
-
 const UserContext = createContext<UserContextValue | null>(null)
 
 async function loadUser(): Promise<{ authUser: AuthUser; toolstoyUser: ToolstoyUser } | null> {

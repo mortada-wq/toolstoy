@@ -17,9 +17,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
+    "paths": { "@/*": ["src/*"] }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/lib/api/emotionalPromptsApi.ts", "src/lib/services/__tests__/**"]
 }

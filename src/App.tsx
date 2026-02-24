@@ -29,7 +29,7 @@ const CharacterStudio = lazy(() => import('./pages/dashboard/CharacterStudio').t
 const MyCharacters = lazy(() => import('./pages/dashboard/MyCharacters').then((m) => ({ default: m.MyCharacters })))
 const EditCharacterPage = lazy(() => import('./pages/dashboard/EditCharacterPage').then((m) => ({ default: m.EditCharacterPage })))
 const WidgetSettings = lazy(() => import('./pages/dashboard/WidgetSettings').then((m) => ({ default: m.WidgetSettings })))
-const WidgetDemo = lazy(() => import('./pages/dashboard/WidgetDemo').then((m) => ({ default: m.WidgetDemo })))
+const WidgetDemo = lazy(() => import('./pages/dashboard/WidgetDemo').then((m) => ({ default: m.default })))
 const BillingPage = lazy(() => import('./pages/dashboard/BillingPage').then((m) => ({ default: m.BillingPage })))
 const SettingsPage = lazy(() => import('./pages/dashboard/SettingsPage').then((m) => ({ default: m.SettingsPage })))
 const AnalyticsPage = lazy(() => import('./pages/dashboard/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })))

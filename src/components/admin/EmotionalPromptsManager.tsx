@@ -51,7 +51,7 @@ export const CharacterList: React.FC<CharacterListProps> = ({
 };
 
 interface EmotionalStatesListProps {
-  characterId: string;
+  characterId?: string;
   prompts: Prompt[];
   selectedEmotion?: string;
   onSelectEmotion: (emotion: string) => void;
@@ -61,7 +61,6 @@ interface EmotionalStatesListProps {
  * Emotional states list component
  */
 export const EmotionalStatesList: React.FC<EmotionalStatesListProps> = ({
-  _characterId,
   prompts,
   selectedEmotion,
   onSelectEmotion,
@@ -98,7 +97,7 @@ export const EmotionalStatesList: React.FC<EmotionalStatesListProps> = ({
 };
 
 interface PromptEditorProps {
-  characterId: string;
+  characterId?: string;
   emotion: string;
   prompt: Prompt | null;
   onSave: (promptText: string) => Promise<void>;
@@ -111,7 +110,6 @@ interface PromptEditorProps {
  * Prompt editor component
  */
 export const PromptEditor: React.FC<PromptEditorProps> = ({
-  _characterId,
   emotion,
   prompt,
   onSave,
@@ -275,7 +273,7 @@ interface PreviewModalProps {
 /**
  * Preview modal component
  */
-export const PreviewModal: React.FC<PreviewModalProps> = ({ _previewId, status, videoUrl, error, onClose }) => {
+export const PreviewModal: React.FC<PreviewModalProps> = ({ status, videoUrl, error, onClose }) => {
   return (
     <div className="preview-modal">
       <div className="modal-content">

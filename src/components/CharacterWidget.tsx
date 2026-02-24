@@ -599,26 +599,10 @@ const CharacterWidget: React.FC<CharacterWidgetProps> = ({
     }
   }, [availableStates, changeAnimationState]);
 
-  const _triggerGreeting = useCallback(() => {
-    changeAnimationState('greeting');
-  }, [changeAnimationState]);
-
-  const _triggerFarewell = useCallback(() => {
-    if (availableStates.includes('farewell')) {
-      changeAnimationState('farewell');
-    }
-  }, [availableStates, changeAnimationState]);
-
   // Sentiment-based triggers
   const triggerHappy = useCallback(() => {
     if (availableStates.includes('happy')) {
       changeAnimationState('happy');
-    }
-  }, [availableStates, changeAnimationState]);
-
-  const triggerConfused = useCallback(() => {
-    if (availableStates.includes('confused')) {
-      changeAnimationState('confused');
     }
   }, [availableStates, changeAnimationState]);
 
@@ -631,15 +615,6 @@ const CharacterWidget: React.FC<CharacterWidgetProps> = ({
       triggerHappy();
     }
   }, [triggerHappy]);
-
-  const _updateConfidence = useCallback((score: number) => {
-    setWidgetState(prev => ({ ...prev, confidenceScore: score }));
-    
-    // Trigger confused state for low confidence
-    if (score < 0.5) {
-      triggerConfused();
-    }
-  }, [triggerConfused]);
 
   // ==========================================================================
   // Position State Management

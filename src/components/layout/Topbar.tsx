@@ -1,12 +1,10 @@
-import { Link } from 'react-router-dom'
-
 interface TopbarProps {
   title: string
   onMenuClick: () => void
   isAdmin?: boolean
 }
 
-export function Topbar({ title, onMenuClick, isAdmin }: TopbarProps) {
+export function Topbar({ title, onMenuClick }: TopbarProps) {
   return (
     <header className="h-16 bg-white border-b border-[#E5E7EB] flex items-center justify-between px-4 md:px-8 shrink-0">
       <div className="flex items-center gap-4">
