@@ -36,7 +36,7 @@ export function DashboardShell() {
     <div className="min-h-screen bg-[#F5F5F5]">
       <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} isAdmin={isAdmin} />
       <div className="md:pl-[240px] min-h-screen flex flex-col">
-        <Topbar title={title} onMenuClick={() => setSidebarOpen(true)} />
+        <Topbar title={title} onMenuClick={() => setSidebarOpen(true)} isAdmin={isAdmin} />
         <main className="flex-1">
           <Outlet />
         </main>

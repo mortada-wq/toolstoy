@@ -70,7 +70,8 @@ export function VerifyEmailPage() {
     setIsLoading(true)
     try {
       await confirmSignUp({ username: email, confirmationCode: codeString })
-      navigate('/dashboard', { replace: true })
+      // User is not auto-signed in after verification — redirect to sign in with success message
+      navigate('/signin?verified=1', { replace: true, state: { email } })
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Invalid code. Check the code and try again.'
