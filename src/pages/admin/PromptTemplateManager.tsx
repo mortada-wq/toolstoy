@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { apiGet, apiPost, apiPut, apiDelete } from '../../lib/api'
 
 interface PromptTemplate {
   id: string
@@ -7,8 +8,18 @@ interface PromptTemplate {
   description: string
   is_active: boolean
   variables: string[]
+  version: number
+  parent_template_id: string | null
   created_at: string
   updated_at: string
+}
+
+interface TemplateAnalytics {
+  totalGenerations: number
+  successfulGenerations: number
+  failedGenerations: number
+  successRate: number
+  avgCostUsd: number | null
 }
 
 const DEFAULT_TEMPLATE = `Professional 3D character mascot design representing {PRODUCT_NAME}.
@@ -45,34 +56,46 @@ export function PromptTemplateManager() {
   const [template, setTemplate] = useState(DEFAULT_TEMPLATE)
   const [templateName, setTemplateName] = useState('Default Template')
   const [templateDescription, setTemplateDescription] = useState('Standard character generation template')
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null)
   const [sampleData, setSampleData] = useState(SAMPLE_DATA)
   const [previewPrompt, setPreviewPrompt] = useState('')
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
-  const [_isLoading, _setIsLoading] = useState(true)
-  const [_activeTemplateId, _setActiveTemplateId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [analytics, setAnalytics] = useState<Record<string, TemplateAnalytics>>({})
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterMode, setFilterMode] = useState<'all' | 'active' | 'inactive'>('all')
+  const [sortBy, setSortBy] = useState<'name' | 'updated_at' | 'version'>('updated_at')
 
-  // Load templates on mount
-  useEffect(() => {
-    loadTemplates()
-  }, [])
-
-  const loadTemplates = async () => {
-    _setIsLoading(true)
+  const loadTemplates = useCallback(async () => {
+    setIsLoading(true)
+    setErrorMessage(null)
     try {
-      // TODO: Implement API call to fetch templates
-      // const response = await fetch('/api/prompt-templates')
-      // const data = await response.json()
-      // setTemplates(data)
-      
-      // Mock data for now
-      setTemplates([])
+      const params = new URLSearchParams({ filter: filterMode, sort: sortBy })
+      if (searchQuery) params.set('search', searchQuery)
+      const data = await apiGet<PromptTemplate[]>(`/api/prompt-templates?${params}`)
+      setTemplates(data)
     } catch (err) {
       console.error('Failed to load templates:', err)
+      setErrorMessage('Failed to load templates')
     } finally {
-      _setIsLoading(false)
+      setIsLoading(false)
+    }
+  }, [filterMode, sortBy, searchQuery])
+
+  // Load templates on mount and when filters change
+  useEffect(() => {
+    void loadTemplates()
+  }, [loadTemplates])
+
+  const loadAnalytics = async (templateId: string) => {
+    try {
+      const data = await apiGet<TemplateAnalytics>(`/api/prompt-templates/${templateId}/analytics`)
+      setAnalytics((prev) => ({ ...prev, [templateId]: data }))
+    } catch (err) {
+      console.error('Failed to load analytics for template', templateId, err)
     }
   }
 
@@ -86,52 +109,64 @@ export function PromptTemplateManager() {
     setPreviewPrompt(preview)
   }
 
-  const handleTestGeneration = async () => {
-    generatePreview()
-    setIsGenerating(true)
-    setGeneratedImage(null)
-
-    try {
-      // TODO: Call actual Bedrock API for test generation
-      await new Promise((resolve) => setTimeout(resolve, 3000))
-      setGeneratedImage('https://via.placeholder.com/512x512/5B7C99/FFFFFF?text=Test+Character')
-    } catch (err) {
-      alert('Generation failed')
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
   const handleSaveTemplate = async () => {
     setIsSaving(true)
+    setValidationErrors([])
+    setErrorMessage(null)
     try {
-      // TODO: Call API to save template
-      // await fetch('/api/prompt-templates', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ name: templateName, template, description: templateDescription })
-      // })
-      
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const payload = { name: templateName, template, description: templateDescription }
+      if (editingTemplateId) {
+        await apiPut(`/api/prompt-templates/${editingTemplateId}`, payload)
+      } else {
+        await apiPost('/api/prompt-templates', payload)
+      }
       setShowSuccess(true)
       setTimeout(() => setShowSuccess(false), 3000)
-      loadTemplates()
+      setEditingTemplateId(null)
+      setTemplate(DEFAULT_TEMPLATE)
+      setTemplateName('Default Template')
+      setTemplateDescription('Standard character generation template')
+      void loadTemplates()
     } catch (err) {
-      alert('Failed to save template')
+      const msg = err instanceof Error ? err.message : 'Failed to save template'
+      setErrorMessage(msg)
     } finally {
       setIsSaving(false)
     }
   }
 
   const handleActivateTemplate = async (templateId: string) => {
+    setErrorMessage(null)
     try {
-      // TODO: Call API to activate template
-      // await fetch(`/api/prompt-templates/${templateId}/activate`, { method: 'POST' })
-      
-      _setActiveTemplateId(templateId)
-      loadTemplates()
+      await apiPost(`/api/prompt-templates/${templateId}/activate`)
+      void loadTemplates()
     } catch (err) {
-      alert('Failed to activate template')
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to activate template')
     }
+  }
+
+  const handleDeleteTemplate = async (templateId: string, isActive: boolean) => {
+    if (isActive) {
+      setErrorMessage('Cannot delete the currently active template')
+      return
+    }
+    if (!confirm('Delete this template? This action cannot be undone.')) return
+    setErrorMessage(null)
+    try {
+      await apiDelete(`/api/prompt-templates/${templateId}`)
+      void loadTemplates()
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to delete template')
+    }
+  }
+
+  const handleEditTemplate = (t: PromptTemplate) => {
+    setEditingTemplateId(t.id)
+    setTemplate(t.template)
+    setTemplateName(t.name)
+    setTemplateDescription(t.description)
+    setPreviewPrompt('')
+    void loadAnalytics(t.id)
   }
 
   const handleResetToDefault = () => {
@@ -140,18 +175,43 @@ export function PromptTemplateManager() {
       setTemplateName('Default Template')
       setTemplateDescription('Standard character generation template')
       setPreviewPrompt('')
-      setGeneratedImage(null)
+      setEditingTemplateId(null)
+      setValidationErrors([])
+    }
+  }
+
+  const handleExportAll = async () => {
+    try {
+      const data = await apiPost<{ templates: unknown[] }>('/api/prompt-templates/export', {})
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `prompt-templates-${new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Failed to export templates:', err)
+      setErrorMessage('Failed to export templates')
     }
   }
 
   return (
     <div className="p-5 md:p-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="font-semibold text-[24px] text-[#1A1A1A]">Master Prompt Template</h1>
-        <p className="text-[14px] text-[#6B7280] mt-1">
-          Control how all user products are transformed into characters
-        </p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="font-semibold text-[24px] text-[#1A1A1A]">Prompt Template Library</h1>
+          <p className="text-[14px] text-[#6B7280] mt-1">
+            Manage and deploy prompt templates for character generation
+          </p>
+        </div>
+        <button
+          onClick={handleExportAll}
+          className="px-4 py-2 border border-[#E5E7EB] text-[#6B7280] rounded-lg text-[13px] font-medium hover:bg-[#F5F5F5] transition-all"
+        >
+          Export All
+        </button>
       </div>
 
       {/* Success Message */}
@@ -164,51 +224,121 @@ export function PromptTemplateManager() {
         </div>
       )}
 
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="mb-4 p-4 bg-[#F5F1ED] border border-[#8B7355] rounded-lg flex items-center gap-2">
+          <svg className="w-5 h-5 text-[#5C4A3A] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          <p className="text-[14px] text-[#5C4A3A]">{errorMessage}</p>
+          <button onClick={() => setErrorMessage(null)} className="ml-auto text-[#8B7355] hover:text-[#5C4A3A]">✕</button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left Column - Template List & Editor */}
         <div className="lg:col-span-2 space-y-4">
+          {/* Search & Filter */}
+          <div className="bg-white border border-[#E5E7EB] rounded-lg p-4">
+            <div className="flex gap-3 flex-wrap">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search templates..."
+                className="flex-1 min-w-[160px] border border-[#E5E7EB] rounded-md px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#5B7C99]"
+              />
+              <select
+                value={filterMode}
+                onChange={(e) => setFilterMode(e.target.value as 'all' | 'active' | 'inactive')}
+                className="border border-[#E5E7EB] rounded-md px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#5B7C99]"
+              >
+                <option value="all">All Templates</option>
+                <option value="active">Active Only</option>
+                <option value="inactive">Inactive Only</option>
+              </select>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'name' | 'updated_at' | 'version')}
+                className="border border-[#E5E7EB] rounded-md px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#5B7C99]"
+              >
+                <option value="updated_at">Last Updated</option>
+                <option value="name">Name</option>
+                <option value="version">Version</option>
+              </select>
+            </div>
+            {!isLoading && (
+              <p className="text-[11px] text-[#9CA3AF] mt-2">{templates.length} template{templates.length !== 1 ? 's' : ''}</p>
+            )}
+          </div>
+
           {/* Template List */}
-          {templates.length > 0 && (
+          {isLoading ? (
+            <div className="bg-white border border-[#E5E7EB] rounded-lg p-6 text-center text-[#6B7280] text-[14px]">Loading templates…</div>
+          ) : templates.length === 0 ? (
+            <div className="bg-white border border-[#E5E7EB] rounded-lg p-6 text-center text-[#6B7280] text-[14px]">
+              No templates found. Create one using the editor below.
+            </div>
+          ) : (
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-6">
-              <h2 className="font-semibold text-[16px] text-[#1A1A1A] mb-4">Saved Templates</h2>
+              <h2 className="font-semibold text-[16px] text-[#1A1A1A] mb-4">Templates</h2>
               <div className="space-y-2">
-                {templates.map((t) => (
-                  <div
-                    key={t.id}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      t.is_active
-                        ? 'border-[#5B7C99] bg-[#5B7C99]/5'
-                        : 'border-[#E5E7EB] hover:border-[#6B7280]'
-                    }`}
-                    onClick={() => {
-                      setTemplate(t.template)
-                      setTemplateName(t.name)
-                      setTemplateDescription(t.description)
-                    }}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-[14px] text-[#1A1A1A]">{t.name}</h3>
-                        <p className="text-[12px] text-[#6B7280] mt-1">{t.description}</p>
+                {templates.map((t) => {
+                  const a = analytics[t.id]
+                  return (
+                    <div
+                      key={t.id}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        t.is_active
+                          ? 'border-[#5B7C99] bg-[#5B7C99]/5'
+                          : 'border-[#E5E7EB] hover:border-[#6B7280]'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-medium text-[14px] text-[#1A1A1A]">{t.name}</h3>
+                            {t.is_active && (
+                              <span className="px-2 py-0.5 bg-[#5B7C99] text-white text-[11px] rounded-full font-medium">Active</span>
+                            )}
+                            <span className="text-[11px] text-[#9CA3AF]">v{t.version}</span>
+                          </div>
+                          <p className="text-[12px] text-[#6B7280] mt-1">{t.description}</p>
+                          {a && (
+                            <p className="text-[11px] text-[#9CA3AF] mt-1">
+                              {a.totalGenerations} gen · {Math.round(a.successRate * 100)}% success
+                              {a.avgCostUsd != null ? ` · avg $${a.avgCostUsd.toFixed(3)}` : ''}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => handleEditTemplate(t)}
+                            className="px-2 py-1 border border-[#E5E7EB] text-[#6B7280] text-[11px] rounded font-medium hover:bg-[#F5F5F5]"
+                          >
+                            Edit
+                          </button>
+                          {!t.is_active && (
+                            <>
+                              <button
+                                onClick={() => handleActivateTemplate(t.id)}
+                                className="px-2 py-1 border border-[#5B7C99] text-[#5B7C99] text-[11px] rounded font-medium hover:bg-[#5B7C99]/10"
+                              >
+                                Activate
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTemplate(t.id, t.is_active)}
+                                className="px-2 py-1 border border-[#E5E7EB] text-[#9CA3AF] text-[11px] rounded font-medium hover:bg-[#F5F5F5]"
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      {t.is_active ? (
-                        <span className="px-2 py-1 bg-[#5B7C99] text-white text-[11px] rounded-full font-medium">
-                          Active
-                        </span>
-                      ) : (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleActivateTemplate(t.id)
-                          }}
-                          className="px-2 py-1 border border-[#6B7280] text-[#6B7280] text-[11px] rounded-full font-medium hover:bg-[#F5F5F5]"
-                        >
-                          Activate
-                        </button>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
@@ -216,7 +346,9 @@ export function PromptTemplateManager() {
           {/* Template Editor */}
           <div className="bg-white border border-[#E5E7EB] rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-[16px] text-[#1A1A1A]">Template Editor</h2>
+              <h2 className="font-semibold text-[16px] text-[#1A1A1A]">
+                {editingTemplateId ? 'Edit Template' : 'New Template'}
+              </h2>
               <button
                 onClick={handleResetToDefault}
                 className="text-[13px] text-[#6B7280] hover:text-[#1A1A1A] underline"
@@ -224,6 +356,16 @@ export function PromptTemplateManager() {
                 Reset to Default
               </button>
             </div>
+
+            {validationErrors.length > 0 && (
+              <div className="mb-4 p-3 bg-[#F5F1ED] border border-[#8B7355] rounded-lg">
+                <ul className="list-disc list-inside space-y-1">
+                  {validationErrors.map((e, i) => (
+                    <li key={i} className="text-[12px] text-[#5C4A3A]">{e}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="space-y-3 mb-4">
               <div>
@@ -257,11 +399,11 @@ export function PromptTemplateManager() {
 
             <div className="flex gap-3 mt-4">
               <button
-                onClick={handleSaveTemplate}
+                onClick={() => void handleSaveTemplate()}
                 disabled={isSaving}
                 className="flex-1 bg-[#1A1A1A] text-white py-3 rounded-lg font-medium text-[14px] hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                {isSaving ? 'Saving...' : 'Save Template'}
+                {isSaving ? 'Saving...' : editingTemplateId ? 'Update Template' : 'Save Template'}
               </button>
               <button
                 onClick={generatePreview}
@@ -275,30 +417,12 @@ export function PromptTemplateManager() {
           {/* Preview Prompt */}
           {previewPrompt && (
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-[16px] text-[#1A1A1A]">Generated Prompt Preview</h3>
-                <button
-                  onClick={handleTestGeneration}
-                  disabled={isGenerating}
-                  className="bg-[#1A1A1A] text-white px-4 py-2 rounded-lg font-medium text-[13px] hover:bg-[#000000] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  {isGenerating ? 'Generating...' : 'Test Generate'}
-                </button>
-              </div>
-
+              <h3 className="font-semibold text-[16px] text-[#1A1A1A] mb-4">Generated Prompt Preview</h3>
               <div className="bg-[#F5F5F5] rounded-lg p-4 border border-[#E5E7EB]">
                 <pre className="text-[12px] text-[#1A1A1A] whitespace-pre-wrap font-mono">
                   {previewPrompt}
                 </pre>
               </div>
-            </div>
-          )}
-
-          {/* Test Generation Result */}
-          {generatedImage && (
-            <div className="bg-white border border-[#E5E7EB] rounded-lg p-6">
-              <h3 className="font-semibold text-[16px] text-[#1A1A1A] mb-4">Test Generation Result</h3>
-              <img src={generatedImage} alt="Test character" className="w-full max-w-md mx-auto rounded-lg" />
             </div>
           )}
         </div>
@@ -307,7 +431,7 @@ export function PromptTemplateManager() {
         <div className="space-y-4">
           {/* Available Variables */}
           <div className="bg-white border border-[#E5E7EB] rounded-lg p-6">
-            <h3 className="font-semibold text-[16px] text-[#1A1A1A] mb-4">Available Variables</h3>
+            <h3 className="font-semibold text-[16px] text-[#1A1A1A] mb-4">Required Variables</h3>
             <div className="space-y-3">
               {VARIABLES.map((variable) => (
                 <div key={variable.name} className="border-b border-[#F5F5F5] pb-3 last:border-0">
@@ -323,7 +447,7 @@ export function PromptTemplateManager() {
 
           {/* Sample Data Editor */}
           <div className="bg-white border border-[#E5E7EB] rounded-lg p-6">
-            <h3 className="font-semibold text-[16px] text-[#1A1A1A] mb-4">Sample Data for Testing</h3>
+            <h3 className="font-semibold text-[16px] text-[#1A1A1A] mb-4">Sample Data for Preview</h3>
             <div className="space-y-3">
               <div>
                 <label className="block text-[12px] font-medium text-[#6B7280] mb-1">Product Name</label>
@@ -386,7 +510,7 @@ export function PromptTemplateManager() {
               <div>
                 <p className="text-[13px] font-medium text-[#5C4A3A]">Important</p>
                 <p className="text-[12px] text-[#5C4A3A] mt-1">
-                  This template affects ALL user character generations. Test thoroughly before activating.
+                  Editing an active template's text creates a new version. Activate it to make it live.
                 </p>
               </div>
             </div>
