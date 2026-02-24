@@ -2,6 +2,24 @@ import { APIGatewayProxyHandler } from 'aws-lambda'
 import { v4 as uuidv4 } from 'uuid'
 import * as db from './database'
 
+interface MediaFolder {
+  id: string
+  name: string
+  description?: string
+  createdBy: string
+  createdAt: string
+}
+
+interface MediaAsset {
+  id: string
+  folderId: string
+  assetName: string
+  assetUrl: string
+  assetType: string
+  createdBy: string
+  createdAt: string
+}
+
 const headers = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
@@ -377,7 +395,7 @@ export const getGenerationHistory: APIGatewayProxyHandler = async (event) => {
     // TODO: Filter by mode if provided
     // TODO: Calculate total costs
 
-    const generations = []
+    const generations: any[] = []
     const totalTestCost = 0
     const totalProductionCost = 0
 

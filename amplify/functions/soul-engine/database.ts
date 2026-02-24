@@ -5,7 +5,7 @@
  * for the Soul Engine Lambda function.
  */
 
-import { Pool, PoolClient, QueryResult } from 'pg'
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg'
 
 // ============================================================================
 // Types
@@ -90,7 +90,7 @@ export async function closePool(): Promise<void> {
  * )
  * ```
  */
-export async function query<T = unknown>(
+export async function query<T extends QueryResultRow = any>(
   text: string,
   values?: unknown[]
 ): Promise<QueryResult<T>> {
@@ -125,7 +125,7 @@ export async function query<T = unknown>(
  * @param values - Query parameters
  * @returns First row or null if no results
  */
-export async function queryOne<T = unknown>(
+export async function queryOne<T extends QueryResultRow = any>(
   text: string,
   values?: unknown[]
 ): Promise<T | null> {
@@ -140,7 +140,7 @@ export async function queryOne<T = unknown>(
  * @param values - Query parameters
  * @returns Array of rows
  */
-export async function queryMany<T = unknown>(
+export async function queryMany<T extends QueryResultRow = any>(
   text: string,
   values?: unknown[]
 ): Promise<T[]> {
