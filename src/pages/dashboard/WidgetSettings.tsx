@@ -89,7 +89,7 @@ export function WidgetSettings() {
           ) : (
             <div className="text-center text-[#6B7280]">
               <p className="font-medium">Create a character first</p>
-              <p className="text-sm mt-1">Select a character above to see the preview</p>
+              <p className="text-sm mt-1">Go to My guys to create one, then come back here</p>
             </div>
           )}
         </div>
