@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DigitalAlchemy } from '../../components/DigitalAlchemy'
 import { CharacterTypeSelector } from '../../components/CharacterTypeSelector'
+import { AvatarCustomizer } from '../../components/AvatarCustomizer'
 
 // Type definitions
 interface GenerationJob {
@@ -78,11 +79,18 @@ function EnthusiastIcon() {
 }
 
 const STEPS = [
+  { num: 0, label: 'Choose' },
   { num: 1, label: 'Product' },
-  { num: 2, label: 'Character' },
-  { num: 3, label: 'Personality' },
+  { num: 2, label: 'Personality' },
+  { num: 3, label: 'Voice' },
   { num: 4, label: 'Knowledge' },
   { num: 5, label: 'Launch' },
+]
+
+const CATEGORY_OPTIONS: { id: CharacterStyleType; title: string; shortDesc: string }[] = [
+  { id: 'product-morphing', title: 'Living Product', shortDesc: 'Transform your product or tool into an animated character' },
+  { id: 'head-only', title: 'Head Only', shortDesc: 'Floating head character for chat widgets' },
+  { id: 'avatar', title: 'Custom Avatar', shortDesc: 'Professional illustrated avatar for your brand' },
 ]
 
 const CHARACTER_TYPES = [
@@ -119,7 +127,7 @@ const QA_ITEMS = [
 ]
 
 export function CharacterStudio() {
-  const [step, setStep] = useState(1)
+  const [step, setStep] = useState(0)
   const [characterStyleType, setCharacterStyleType] = useState<CharacterStyleType>('product-morphing')
   const [avatarConfig, setAvatarConfig] = useState<AvatarConfig | null>(null)
   const [characterType, setCharacterType] = useState<string | null>('The Expert')
@@ -136,8 +144,7 @@ export function CharacterStudio() {
   // New state for Task 5.7
   const [productImage, setProductImage] = useState<File | null>(null)
   const [productImagePreview, setProductImagePreview] = useState<string | null>(null)
-  const [productName, setProductName] = useState('')
-  const [brandName, setBrandName] = useState('')
+  const [objectType, setObjectType] = useState('')
   const [currentJob, setCurrentJob] = useState<GenerationJob | null>(null)
   const [variations, setVariations] = useState<CharacterVariation[]>([])
   const [selectedVariation, setSelectedVariation] = useState<number | null>(null)
@@ -145,8 +152,6 @@ export function CharacterStudio() {
   const [estimatedTime, setEstimatedTime] = useState<number>(0)
   const [generationComplete, setGenerationComplete] = useState(false)
   const [availableStates, setAvailableStates] = useState<string[]>([])
-  const [showGenerationTypeModal, setShowGenerationTypeModal] = useState(false)
-  const [_selectedGenerationType, _setSelectedGenerationType] = useState<'tools' | 'genius-avatar' | 'head-only' | null>(null)
 
   const toggleVibe = (v: string) => {
     setSelectedVibes((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]))
@@ -222,22 +227,23 @@ export function CharacterStudio() {
   }
 
   // Handle character generation
-  const handleGenerate = () => {
-    if (!productImage || !productName) {
+  const handleGenerate = async () => {
+    const needsProduct = characterStyleType === 'product-morphing'
+    if (needsProduct && (!productImage || !objectType.trim())) {
       setError({
         error: 'VALIDATION_ERROR',
-        message: 'Please upload a product image and enter a product name',
+        message: 'Please upload a product image and enter the object type (e.g. blender, chair, door)',
       })
       return
     }
-    
-    // Show the generation type selection modal
-    setShowGenerationTypeModal(true)
-  }
+    if ((needsProduct || characterStyleType === 'head-only') && !productImage) {
+      setError({
+        error: 'VALIDATION_ERROR',
+        message: 'Please upload an image',
+      })
+      return
+    }
 
-  const handleGenerateWithType = async (generationType: 'tools' | 'genius-avatar' | 'head-only') => {
-    _setSelectedGenerationType(generationType)
-    setShowGenerationTypeModal(false)
     setGenerating(true)
     setError(null)
     setVariations([])
@@ -245,16 +251,16 @@ export function CharacterStudio() {
     setProgressStep(1)
 
     try {
-      const imageBase64 = await convertImageToBase64(productImage!)
-      
-      // Map character type to API format
+      const imageBase64 = productImage ? await convertImageToBase64(productImage) : ''
+      const generationType = characterStyleType === 'product-morphing' ? 'tools' : characterStyleType === 'head-only' ? 'head-only' : 'genius-avatar'
+
       const characterTypeMap: Record<string, 'mascot' | 'spokesperson' | 'sidekick' | 'expert'> = {
         'The Expert': 'expert',
         'The Entertainer': 'mascot',
         'The Advisor': 'spokesperson',
         'The Enthusiast': 'sidekick',
       }
-      
+
       const response = await apiCall<{
         jobId: string
         variations: CharacterVariation[]
@@ -263,7 +269,8 @@ export function CharacterStudio() {
         method: 'POST',
         body: JSON.stringify({
           productImage: imageBase64,
-          productName,
+          productName: objectType.trim() || 'product',
+          objectType: objectType.trim(),
           generationType,
           characterStyleType,
           characterType: characterStyleType === 'avatar' ? 'avatar' : characterTypeMap[characterType || 'The Expert'],
@@ -308,55 +315,11 @@ export function CharacterStudio() {
 
   return (
     <>
-      {showGenerationTypeModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-2xl w-full mx-4">
-            <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">Choose Your Character Type</h2>
-            <p className="text-[#6B7280] mb-6">Select how you'd like your character to be generated:</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <button
-                onClick={() => handleGenerateWithType('tools')}
-                className="p-6 border-2 border-[#E5E7EB] rounded-lg hover:border-[#5B7C99] hover:bg-[#F9FAFB] transition-all text-left"
-              >
-                <div className="text-3xl mb-2">🛠️</div>
-                <h3 className="font-semibold text-[#1A1A1A] mb-1">The Tools</h3>
-                <p className="text-sm text-[#6B7280]">Expert, Entertainer, Advisor, or Enthusiast character types</p>
-              </button>
-              
-              <button
-                onClick={() => handleGenerateWithType('genius-avatar')}
-                className="p-6 border-2 border-[#E5E7EB] rounded-lg hover:border-[#5B7C99] hover:bg-[#F9FAFB] transition-all text-left"
-              >
-                <div className="text-3xl mb-2">🧠</div>
-                <h3 className="font-semibold text-[#1A1A1A] mb-1">Genius Avatar</h3>
-                <p className="text-sm text-[#6B7280]">Full-body animated character with advanced AI</p>
-              </button>
-              
-              <button
-                onClick={() => handleGenerateWithType('head-only')}
-                className="p-6 border-2 border-[#E5E7EB] rounded-lg hover:border-[#5B7C99] hover:bg-[#F9FAFB] transition-all text-left"
-              >
-                <div className="text-3xl mb-2">👤</div>
-                <h3 className="font-semibold text-[#1A1A1A] mb-1">Head Only</h3>
-                <p className="text-sm text-[#6B7280]">Animated head and shoulders character</p>
-              </button>
-            </div>
-            
-            <button
-              onClick={() => setShowGenerationTypeModal(false)}
-              className="w-full py-2 px-4 border border-[#E5E7EB] rounded-lg text-[#6B7280] hover:bg-[#F9FAFB] transition-all"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
       <div className="bg-[#F5F5F5] min-h-full">
         {/* Step indicator */}
         <div className="bg-white border-b border-[#E5E7EB] px-4 md:px-8 py-5">
-          <div className="flex items-center justify-between max-w-2xl mx-auto">
-          {STEPS.map((s, i) => (
+          <div className="flex items-center justify-between max-w-3xl mx-auto">
+          {STEPS.filter((s) => s.num > 0).map((s, i) => (
             <div key={s.num} className="flex items-center flex-1">
               <div className="flex flex-col items-center">
                 <div
@@ -378,7 +341,7 @@ export function CharacterStudio() {
                   {s.label}
                 </span>
               </div>
-              {i < STEPS.length - 1 && (
+              {i < STEPS.filter((s) => s.num > 0).length - 1 && (
                 <div
                   className={`flex-1 h-px mx-1 ${
                     step > s.num ? 'bg-[#1A1A1A]' : 'bg-[#E5E7EB]'
@@ -392,18 +355,56 @@ export function CharacterStudio() {
 
         {/* Step content */}
         <div className="p-6 md:p-12">
-        {/* Step 1 — Product */}
-        {step === 1 && (
+        {/* Step 0 — Super Question: Choose category first */}
+        {step === 0 && (
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="font-bold text-3xl md:text-4xl text-[#1A1A1A] leading-tight">
+                What kind of character do you want to create?
+              </h2>
+              <p className="mt-3 text-[18px] text-[#6B7280]">
+                Choose one — this determines how we generate your character.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {CATEGORY_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    setCharacterStyleType(opt.id)
+                    setStep(1)
+                  }}
+                  className={`p-8 md:p-10 rounded-2xl border-2 transition-all text-left ${
+                    characterStyleType === opt.id
+                      ? 'border-[#1A1A1A] bg-[#FAFAFA] shadow-lg'
+                      : 'border-[#E5E7EB] bg-white hover:border-[#6B7280] hover:shadow-md'
+                  }`}
+                >
+                  <div className="text-4xl mb-4">
+                    {opt.id === 'product-morphing' && '🛠️'}
+                    {opt.id === 'head-only' && '👤'}
+                    {opt.id === 'avatar' && '✨'}
+                  </div>
+                  <h3 className="font-bold text-xl text-[#1A1A1A]">{opt.title}</h3>
+                  <p className="mt-2 text-[15px] text-[#6B7280]">{opt.shortDesc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 1 — Product (Living Product) or Avatar/Head setup */}
+        {step === 1 && characterStyleType === 'product-morphing' && (
           <div className="max-w-[640px] mx-auto">
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 md:p-10">
               <h2 className="font-bold text-2xl text-[#1A1A1A] leading-tight">
-                What product are we building a character for?
+                Your product or tool
               </h2>
               <p className="mt-2 text-[15px] text-[#6B7280] font-normal">
-                Upload your product image and provide details to get started.
+                Upload an image and tell us what type of object it is. The AI will create an animated version — no human faces.
               </p>
 
-              {/* Product Image Upload - Prominent Feature */}
+              {/* Product Image Upload */}
               <div className="mt-8">
                 <label className="block font-medium text-[13px] text-[#1A1A1A] mb-2">
                   Product Image *
@@ -443,65 +444,99 @@ export function CharacterStudio() {
                 )}
               </div>
 
-              <div className="mt-6 space-y-4">
-                <div>
-                  <label className="block font-medium text-[13px] text-[#1A1A1A] mb-1.5">Product Name *</label>
-                  <input
-                    type="text"
-                    value={productName}
-                    onChange={(e) => setProductName(e.target.value)}
-                    placeholder="Enter your product name"
-                    className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] font-normal focus:border-[#5B7C99] focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-medium text-[13px] text-[#1A1A1A] mb-1.5">Brand Name</label>
-                  <input
-                    type="text"
-                    value={brandName}
-                    onChange={(e) => setBrandName(e.target.value)}
-                    placeholder="Enter your brand name (optional)"
-                    className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] font-normal focus:border-[#5B7C99] focus:outline-none"
-                  />
-                </div>
+              <div className="mt-6">
+                <label className="block font-medium text-[13px] text-[#1A1A1A] mb-1.5">Object Type *</label>
+                <input
+                  type="text"
+                  value={objectType}
+                  onChange={(e) => setObjectType(e.target.value)}
+                  placeholder="e.g. blender, chair, door, pillar, vacuum cleaner"
+                  className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] font-normal focus:border-[#5B7C99] focus:outline-none"
+                />
+                <p className="mt-1 text-[12px] text-[#6B7280]">What is this object? The AI uses this to generate an animated version of your product.</p>
               </div>
 
-              <div className="mt-8 flex justify-end">
+              <div className="mt-8 flex justify-between">
+                <button onClick={() => setStep(0)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">Back</button>
                 <button
                   onClick={() => setStep(2)}
-                  disabled={!productImage || !productName}
+                  disabled={!productImage || !objectType.trim()}
                   className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next: Build the Character
+                  Next: Personality
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 2 — Character Style */}
+        {step === 1 && (characterStyleType === 'head-only' || characterStyleType === 'avatar') && (
+          <div className="max-w-[640px] mx-auto">
+            <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 md:p-10">
+              <h2 className="font-bold text-2xl text-[#1A1A1A]">
+                {characterStyleType === 'avatar' ? 'Design your avatar' : 'Head-only character'}
+              </h2>
+              <p className="mt-2 text-[15px] text-[#6B7280]">
+                {characterStyleType === 'avatar'
+                  ? 'Customize your professional illustrated avatar.'
+                  : 'Upload a reference image for your head-only character.'}
+              </p>
+              {characterStyleType === 'avatar' && (
+                <div className="mt-8">
+                  <AvatarCustomizer
+                    onAvatarChange={(config) => {
+                      setAvatarConfig(config)
+                    }}
+                  />
+                </div>
+              )}
+              {characterStyleType === 'head-only' && (
+                <div className="mt-8">
+                  <label className="block font-medium text-[13px] text-[#1A1A1A] mb-2">Reference Image</label>
+                  {!productImagePreview ? (
+                    <label htmlFor="head-image-upload" className="block cursor-pointer">
+                      <div className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-12 bg-[#FAFAFA] text-center hover:border-[#5B7C99] transition-all">
+                        <svg className="w-10 h-10 mx-auto text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        <p className="mt-3 font-medium text-[16px] text-[#1A1A1A]">Drop image here</p>
+                        <input id="head-image-upload" type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                      </div>
+                    </label>
+                  ) : (
+                    <div className="relative border-2 border-[#5B7C99] rounded-lg p-4">
+                      <img src={productImagePreview} alt="Reference" className="w-full h-48 object-contain rounded-lg" />
+                      <button onClick={() => { setProductImage(null); setProductImagePreview(null) }} className="absolute top-4 right-4 bg-white border rounded-full p-2">✕</button>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="mt-8 flex justify-between">
+                <button onClick={() => setStep(0)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">Back</button>
+                <button
+                  onClick={() => setStep(2)}
+                  disabled={characterStyleType === 'head-only' && !productImage}
+                  className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg disabled:opacity-50"
+                >
+                  Next: Personality
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2 — Personality */}
         {step === 2 && (
           <div className="max-w-[800px] mx-auto">
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 md:p-10">
-              <h2 className="font-bold text-2xl text-[#1A1A1A]">Choose Your Character Style</h2>
+              <h2 className="font-bold text-2xl text-[#1A1A1A]">Character Personality</h2>
               <p className="mt-2 text-[15px] text-[#6B7280]">
-                Select how you want your AI character to look and feel.
+                Select how your character should sound and behave.
               </p>
 
-              <CharacterTypeSelector 
-                onTypeSelect={(type, config) => {
-                  setCharacterStyleType(type)
-                  if (config) {
-                    setAvatarConfig(config)
-                  }
-                }}
-                selectedType={characterStyleType}
-              />
-
-              {/* Traditional personality options - only show for non-avatar types */}
               {characterStyleType !== 'avatar' && (
                 <div className="mt-8">
-                  <h3 className="font-semibold text-lg text-[#1A1A1A] mb-4">Character Personality</h3>
+                  <h3 className="font-semibold text-lg text-[#1A1A1A] mb-4">Personality Type</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     {CHARACTER_TYPES.map((t) => (
                       <button
@@ -540,23 +575,23 @@ export function CharacterStudio() {
                   </div>
                 </div>
               )}
+              {characterStyleType === 'avatar' && (
+                <div className="mt-8 p-6 bg-[#F5F5F5] rounded-lg">
+                  <p className="text-[15px] text-[#6B7280]">Your avatar is configured. Continue to add name and voice.</p>
+                </div>
+              )}
 
               <div className="mt-8 flex justify-between">
-                <button onClick={() => setStep(1)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">
-                  Back
-                </button>
-                <button
-                  onClick={() => setStep(3)}
-                  className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg"
-                >
-                  Next: Personality
+                <button onClick={() => setStep(1)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">Back</button>
+                <button onClick={() => setStep(3)} className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg">
+                  Next: Voice
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 3 — Personality */}
+        {/* Step 3 — Voice (was Personality name/voice) */}
         {step === 3 && (
           <div className="max-w-[640px] mx-auto">
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 md:p-10">
@@ -622,13 +657,8 @@ export function CharacterStudio() {
               </div>
 
               <div className="mt-8 flex justify-between">
-                <button onClick={() => setStep(2)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">
-                  Back
-                </button>
-                <button
-                  onClick={() => setStep(4)}
-                  className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg"
-                >
+                <button onClick={() => setStep(2)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">Back</button>
+                <button onClick={() => setStep(4)} className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg">
                   Next: Knowledge Base
                 </button>
               </div>
@@ -695,13 +725,8 @@ export function CharacterStudio() {
               </div>
 
               <div className="mt-8 flex justify-between">
-                <button onClick={() => setStep(3)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">
-                  Back
-                </button>
-                <button
-                  onClick={() => setStep(5)}
-                  className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg"
-                >
+                <button onClick={() => setStep(3)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">Back</button>
+                <button onClick={() => setStep(5)} className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg">
                   Next: Launch
                 </button>
               </div>
@@ -750,9 +775,8 @@ export function CharacterStudio() {
 
                   <div className="mt-8 space-y-0">
                     {[
-                      ['Product', productName],
-                      ['Brand', brandName || 'Not specified'],
-                      ['Character Style', characterStyleType === 'avatar' ? 'Custom Avatar' : characterStyleType === 'head-only' ? 'Head Only' : 'Product Morphing'],
+                      ['Object Type', objectType || '—'],
+                      ['Category', characterStyleType === 'avatar' ? 'Custom Avatar' : characterStyleType === 'head-only' ? 'Head Only' : 'Living Product'],
                       ['Character Type', characterStyleType === 'avatar' ? 'Avatar' : characterType || 'The Expert'],
                       ['Character Name', charName],
                       ['Vibe Tags', selectedVibes.join(', ')],

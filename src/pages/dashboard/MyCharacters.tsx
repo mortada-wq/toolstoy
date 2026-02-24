@@ -59,7 +59,7 @@ export function MyCharacters() {
   return (
     <div className="p-5 md:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="font-bold text-2xl text-[#1A1A1A]">My Characters</h2>
+        <h2 className="font-bold text-2xl text-[#1A1A1A]">My guys</h2>
         <Link
           to={createLink}
           className="border-[1.5px] border-[#1A1A1A] bg-white text-[#1A1A1A] font-semibold text-[14px] px-5 py-2.5 rounded-lg hover:bg-[#FAFAFA] w-fit"

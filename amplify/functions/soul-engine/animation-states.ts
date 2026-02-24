@@ -11,6 +11,13 @@
 
 export type SubscriptionTier = 'free' | 'pro' | 'enterprise'
 
+/** Enum-like object for subscription tier values (use with type SubscriptionTier) */
+export const SubscriptionTier = {
+  FREE: 'free',
+  PRO: 'pro',
+  ENTERPRISE: 'enterprise',
+} as const
+
 export interface AnimationState {
   id: string
   name: string

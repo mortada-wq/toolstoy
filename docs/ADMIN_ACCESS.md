@@ -11,10 +11,12 @@ The following email addresses have admin access to Toolstoy:
 Admin access is determined by email address in `src/context/UserContext.tsx`:
 
 ```typescript
-const ADMIN_EMAILS = [
-  'mortadagzar@gmail.com',
-]
+const SUPER_ADMINS = ['mortadagzar@gmail.com', 'mortada@howvie.com']
+const ADMINS: string[] = []      // Full admin access, cannot manage other admins
+const ASSISTANTS: string[] = []   // Read-only admin dashboard access
 ```
+
+Roles: `super_admin` | `admin` | `assistant` (any non-null = `isAdmin`).
 
 When a user signs in:
 1. Their email is checked against the `ADMIN_EMAILS` list
@@ -45,12 +47,10 @@ Admin users see:
 To add a new admin user:
 
 1. Open `src/context/UserContext.tsx`
-2. Add email to `ADMIN_EMAILS` array:
+2. Add email to the appropriate list:
    ```typescript
-   const ADMIN_EMAILS = [
-     'mortadagzar@gmail.com',
-     'newadmin@example.com', // Add here
-   ]
+   const SUPER_ADMINS = ['mortadagzar@gmail.com', 'newadmin@example.com']
+   // or ADMINS for full admin, or ASSISTANTS for read-only
    ```
 3. Save and redeploy
 4. User must sign out and sign in again to get admin access
@@ -60,7 +60,7 @@ To add a new admin user:
 To remove admin access:
 
 1. Open `src/context/UserContext.tsx`
-2. Remove email from `ADMIN_EMAILS` array
+2. Remove email from `SUPER_ADMINS`, `ADMINS`, or `ASSISTANTS` array
 3. Save and redeploy
 4. User will lose admin access on next page load
 
@@ -85,7 +85,7 @@ To remove admin access:
 ## Troubleshooting
 
 **Issue: Admin user can't access /admin routes**
-- Verify email is in `ADMIN_EMAILS` array
+- Verify email is in `SUPER_ADMINS`, `ADMINS`, or `ASSISTANTS` array
 - Check email spelling (case-insensitive)
 - Sign out and sign in again
 - Clear browser cache
