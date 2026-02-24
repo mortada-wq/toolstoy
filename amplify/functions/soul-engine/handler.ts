@@ -38,6 +38,7 @@ import { query, queryOne } from './database'
 interface GenerateCharacterRequest {
   productImage: string // Base64 or URL
   productName: string
+  objectType?: string // For Living Product: e.g. "blender", "chair" — replaces productName in prompt
   characterType: 'mascot' | 'spokesperson' | 'sidekick' | 'expert' | 'avatar'
   characterStyleType?: 'product-morphing' | 'head-only' | 'avatar'
   generationType?: 'tools' | 'genius-avatar' | 'head-only'
@@ -166,8 +167,10 @@ async function handleGenerateCharacterVariations(
         category: imageAnalysis.category,
         colorCount: imageAnalysis.dominantColors.length,
       })
+      const isLivingProduct = request.characterStyleType === 'product-morphing'
+      const nameForPrompt = (isLivingProduct && request.objectType) ? request.objectType : request.productName
       const templateVariables: TemplateVariables = {
-        productName: request.productName,
+        productName: nameForPrompt,
         characterType: request.characterType,
         productCategory: imageAnalysis.category,
         dominantColors: formatColors(imageAnalysis.dominantColors),
@@ -176,6 +179,9 @@ async function handleGenerateCharacterVariations(
       const processed = processTemplate(template, templateVariables)
       finalPrompt = processed.prompt
       negativePrompt = processed.negativePrompt
+      if (isLivingProduct) {
+        negativePrompt += ', human face, human head, creature face, person, human, anthropomorphic face, facial features'
+      }
       console.log(`[${jobId}] Processed prompt template (${finalPrompt.length} chars)`)
     }
 

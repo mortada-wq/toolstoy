@@ -23,6 +23,7 @@ interface AvatarConfig {
 interface GenerateCharacterRequest {
   productImage: string // Base64 or URL
   productName: string
+  objectType?: string // For Living Product: e.g. "blender", "chair"
   characterType: 'mascot' | 'spokesperson' | 'sidekick' | 'expert' | 'avatar'
   characterStyleType?: 'product-morphing' | 'head-only' | 'avatar'
   generationType?: 'tools' | 'genius-avatar' | 'head-only'
@@ -94,8 +95,9 @@ function validateGenerateCharacterRequest(body: Record<string, unknown>): string
   if (!body.productImage || typeof body.productImage !== 'string') {
     return 'productImage is required and must be a string'
   }
-  if (!body.productName || typeof body.productName !== 'string') {
-    return 'productName is required and must be a string'
+  const nameOrType = body.productName ?? body.objectType
+  if (!nameOrType || typeof nameOrType !== 'string') {
+    return 'productName or objectType is required and must be a string'
   }
   if (!body.characterType || typeof body.characterType !== 'string') {
     return 'characterType is required and must be a string'
@@ -225,7 +227,8 @@ const handler: APIGatewayProxyHandlerV2 = async (event) => {
       // Build request payload
       const request: GenerateCharacterRequest = {
         productImage: body.productImage as string,
-        productName: body.productName as string,
+        productName: (body.productName as string) || (body.objectType as string) || 'product',
+        objectType: body.objectType as string | undefined,
         characterType: body.characterType as GenerateCharacterRequest['characterType'],
         characterStyleType: body.characterStyleType as GenerateCharacterRequest['characterStyleType'],
         generationType: body.generationType as GenerateCharacterRequest['generationType'],

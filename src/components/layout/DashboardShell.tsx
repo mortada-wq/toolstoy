@@ -6,7 +6,7 @@ import { Topbar } from './Topbar'
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/dashboard/studio': 'Character Studio',
-  '/dashboard/characters': 'My Characters',
+  '/dashboard/characters': 'My guys',
   '/dashboard/widget': 'Widget Settings',
   '/dashboard/billing': 'Billing',
   '/dashboard/analytics': 'Analytics',
@@ -32,12 +32,15 @@ export function DashboardShell() {
 
   const title = getPageTitle(location.pathname)
 
+  const adminGrayBg = 'bg-[#E8E8E8]'
+  const userBg = 'bg-[#F5F5F5]'
+
   return (
-    <div className="min-h-screen bg-[#F5F5F5]">
+    <div className={`min-h-screen ${isAdmin ? adminGrayBg : userBg}`}>
       <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} isAdmin={isAdmin} />
       <div className="md:pl-[240px] min-h-screen flex flex-col">
         <Topbar title={title} onMenuClick={() => setSidebarOpen(true)} isAdmin={isAdmin} />
-        <main className="flex-1">
+        <main className={`flex-1 ${isAdmin ? 'bg-[#E0E0E0]' : ''}`}>
           <Outlet />
         </main>
       </div>
