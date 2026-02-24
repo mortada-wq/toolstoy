@@ -13,5 +13,5 @@ export const soulEngine = defineFunction({
     CDN_DOMAIN: 'cdn.toolstoy.app',
     DATABASE_URL: process.env.DATABASE_URL || 'postgresql://placeholder',
   },
-  ephemeralStorageSize: '3 GiB',
+  ephemeralStorageSizeMB: 3072,
 })

@@ -612,7 +612,7 @@ const handler: APIGatewayProxyHandlerV2 = async (event) => {
             continue
           }
 
-          const variables = extractVariablePlaceholders(t.template)
+          const variables = extractVariablePlaceholders(t.template as string)
           const result = await queryOne<{ id: string }>(
             `INSERT INTO prompt_templates (name, template, description, is_active, variables, version, created_by)
              VALUES ($1, $2, $3, false, $4, 1, $5)

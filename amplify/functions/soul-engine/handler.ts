@@ -165,16 +165,16 @@ async function handleGenerateCharacterVariations(
       const imageAnalysis: ImageAnalysisResult = await analyzeImage(request.productImage)
       console.log(`[${jobId}] Image analysis complete:`, {
         category: imageAnalysis.category,
-        colorCount: imageAnalysis.dominantColors.length,
+        colorCount: imageAnalysis.colors.length,
       })
       const isLivingProduct = request.characterStyleType === 'product-morphing'
       const nameForPrompt = (isLivingProduct && request.objectType) ? request.objectType : request.productName
       const templateVariables: TemplateVariables = {
-        productName: nameForPrompt,
-        characterType: request.characterType,
-        productCategory: imageAnalysis.category,
-        dominantColors: formatColors(imageAnalysis.dominantColors),
-        vibeTags: formatVibeTags(request.vibeTags),
+        PRODUCT_NAME: nameForPrompt,
+        CHARACTER_TYPE: request.characterType,
+        PRODUCT_TYPE: imageAnalysis.category,
+        PRODUCT_COLORS: formatColors(imageAnalysis.colors),
+        VIBE_TAGS: formatVibeTags(request.vibeTags),
       }
       const processed = processTemplate(template, templateVariables)
       finalPrompt = processed.prompt
@@ -197,18 +197,18 @@ async function handleGenerateCharacterVariations(
     console.log(`[${jobId}] Uploading variations to S3...`)
     const uploadPromises = imageVariations.map(async (variation, index) => {
       const s3Key = `characters/${request.merchantId}/${jobId}/variation-${index + 1}.png`
-      const uploadResult: UploadResult = await uploadImageToS3(
-        variation.imageBase64,
-        s3Key,
-        S3_BUCKET
-      )
+      const uploadResult: UploadResult = await uploadImageToS3({
+        personaId: request.merchantId,
+        variationNumber: index + 1,
+        imageData: Buffer.from(variation.imageData, 'base64'),
+      })
       
       return {
         variationNumber: index + 1,
         imageUrl: `https://${CDN_DOMAIN}/${s3Key}`,
         seed: variation.seed,
         timestamp: new Date().toISOString(),
-        s3Key: uploadResult.key,
+        s3Key: uploadResult.s3Key,
       }
     })
     

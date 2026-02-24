@@ -1,4 +1,4 @@
-import { Pool, PoolClient } from 'pg'
+import { Pool, PoolClient, QueryResultRow } from 'pg'
 
 let pool: Pool | null = null
 
@@ -28,13 +28,13 @@ function getPool(): Pool {
   return pool
 }
 
-export async function query<T = unknown>(text: string, values?: unknown[]): Promise<T[]> {
+export async function query<T extends QueryResultRow = QueryResultRow>(text: string, values?: unknown[]): Promise<T[]> {
   const pool = getPool()
   const result = await pool.query<T>(text, values)
   return result.rows
 }
 
-export async function queryOne<T = unknown>(text: string, values?: unknown[]): Promise<T | null> {
+export async function queryOne<T extends QueryResultRow = QueryResultRow>(text: string, values?: unknown[]): Promise<T | null> {
   const rows = await query<T>(text, values)
   return rows[0] || null
 }

@@ -2,6 +2,25 @@ import { APIGatewayProxyHandler } from 'aws-lambda'
 import { v4 as uuidv4 } from 'uuid'
 import * as db from './database'
 
+interface MediaFolder {
+  id: string
+  name: string
+  description?: string
+  createdBy: string
+  createdAt: string
+}
+
+interface MediaAsset {
+  id: string
+  folderId?: string
+  name: string
+  url: string
+  contentType: string
+  size: number
+  createdBy: string
+  createdAt: string
+}
+
 const headers = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
@@ -209,9 +228,10 @@ export const uploadMediaAsset: APIGatewayProxyHandler = async (event) => {
     const asset: MediaAsset = {
       id: assetId,
       folderId,
-      assetName: 'uploaded-file',
-      assetUrl: 's3://bucket/path',
-      assetType: 'image/jpeg',
+      name: 'uploaded-file',
+      url: 's3://bucket/path',
+      contentType: 'image/jpeg',
+      size: 0,
       createdBy: adminId,
       createdAt: now,
     }
@@ -377,7 +397,7 @@ export const getGenerationHistory: APIGatewayProxyHandler = async (event) => {
     // TODO: Filter by mode if provided
     // TODO: Calculate total costs
 
-    const generations = []
+    const generations: unknown[] = []
     const totalTestCost = 0
     const totalProductionCost = 0
 
