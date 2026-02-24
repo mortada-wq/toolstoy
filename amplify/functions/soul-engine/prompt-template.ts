@@ -5,7 +5,7 @@
  * Supports variable substitution and negative prompt appending.
  */
 
-import { queryOne } from './database'
+import { query, queryOne } from './database'
 
 // ============================================================================
 // Types
@@ -238,33 +238,153 @@ export function processTemplate(
   return result
 }
 
+/**
+ * Required template variable names that must appear in every prompt template.
+ */
+export const REQUIRED_TEMPLATE_VARIABLES = [
+  'PRODUCT_NAME',
+  'CHARACTER_TYPE',
+  'PRODUCT_COLORS',
+  'VIBE_TAGS',
+  'PRODUCT_TYPE',
+] as const
+
 // ============================================================================
-// Validate Template Variables
+// Validate Template (checks template ITSELF for required variables)
 // ============================================================================
 
 /**
- * Validates that all required template variables are provided.
- * 
- * @param template - Prompt template
- * @param variables - Variable values to validate
- * @returns True if all required variables are present
+ * Validates that a prompt template contains all required variable placeholders
+ * and that all variable placeholders use the correct format {VARIABLE_NAME}.
+ *
+ * @param templateText - The template text to validate
+ * @returns Validation result with missing variables and unrecognized variable warnings
  */
-export function validateTemplateVariables(
-  template: PromptTemplate,
-  variables: TemplateVariables
-): { valid: boolean; missing: string[] } {
-  const requiredVariables = extractVariablePlaceholders(template.template)
-  const providedVariables = Object.keys(variables)
-  
-  const missing = requiredVariables.filter(
-    (required) => !providedVariables.includes(required)
+export function validateTemplate(templateText: string): {
+  valid: boolean
+  missingVariables: string[]
+  unrecognizedVariables: string[]
+} {
+  const foundVariables = extractVariablePlaceholders(templateText)
+  const requiredSet = new Set<string>(REQUIRED_TEMPLATE_VARIABLES)
+  const supportedSet = new Set<string>(SUPPORTED_VARIABLES)
+
+  const missingVariables = REQUIRED_TEMPLATE_VARIABLES.filter(
+    (v) => !foundVariables.includes(v)
   )
-  
+  const unrecognizedVariables = foundVariables.filter((v) => !supportedSet.has(v))
+
   return {
-    valid: missing.length === 0,
-    missing,
+    valid: missingVariables.length === 0,
+    missingVariables,
+    unrecognizedVariables,
   }
 }
+
+// ============================================================================
+// Retrieve Template by ID
+// ============================================================================
+
+/**
+ * Retrieves a prompt template by its ID.
+ *
+ * @param id - Template UUID
+ * @returns Prompt template or null if not found
+ */
+export async function retrievePromptTemplateById(id: string): Promise<PromptTemplate | null> {
+  try {
+    const row = await queryOne<{
+      id: string
+      name: string
+      template: string
+      description: string
+      is_active: boolean
+      variables: string[]
+      version: number
+      created_by: string
+      created_at: string
+      updated_at: string
+    }>(
+      `SELECT id, name, template, description, is_active, variables,
+              version, created_by, created_at, updated_at
+       FROM prompt_templates
+       WHERE id = $1`,
+      [id]
+    )
+
+    if (!row) return null
+
+    return {
+      id: row.id,
+      name: row.name,
+      template: row.template,
+      description: row.description,
+      is_active: row.is_active,
+      variables: row.variables,
+      created_by: row.created_by,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }
+  } catch (error) {
+    console.error('Error retrieving prompt template by ID:', error)
+    return null
+  }
+}
+
+// ============================================================================
+// Template Usage Tracking
+// ============================================================================
+
+/**
+ * Records which prompt template was used for a generation job.
+ *
+ * @param jobId - Generation job ID
+ * @param templateId - Prompt template ID
+ * @param promptUsed - The fully processed prompt text
+ */
+export async function recordTemplateUsage(
+  jobId: string,
+  templateId: string,
+  promptUsed: string
+): Promise<void> {
+  try {
+    await query(
+      `UPDATE generation_jobs
+       SET prompt_template_id = $1,
+           prompt_used = $2
+       WHERE id = $3`,
+      [templateId, promptUsed, jobId]
+    )
+    console.log(`Recorded template usage: job=${jobId} template=${templateId}`)
+  } catch (error) {
+    console.error('Error recording template usage:', error)
+  }
+}
+
+/**
+ * Records which prompt template was used to generate a persona's character.
+ *
+ * @param personaId - Persona ID
+ * @param templateId - Prompt template ID
+ */
+export async function recordPersonaTemplate(
+  personaId: string,
+  templateId: string
+): Promise<void> {
+  try {
+    await query(
+      `UPDATE personas
+       SET prompt_template_id = $1
+       WHERE id = $2`,
+      [templateId, personaId]
+    )
+    console.log(`Recorded persona template: persona=${personaId} template=${templateId}`)
+  } catch (error) {
+    console.error('Error recording persona template:', error)
+  }
+}
+
+
 
 // ============================================================================
 // Format Helper Functions
