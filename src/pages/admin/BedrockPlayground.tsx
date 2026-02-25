@@ -36,21 +36,6 @@ interface ApiError {
   cooldownRemaining?: number
 }
 
-const _IMAGE_MODELS = [
-  { id: 'titan', name: 'Amazon Titan Image Generator', cost: '$0.008' },
-]
-
-const _VIDEO_MODELS = [
-  { id: 'nova-canvas', name: 'Amazon Nova Canvas', cost: '$0.05', duration: '6 sec' },
-]
-
-const _ANIMATION_STATES = [
-  { id: 'idle', name: 'Idle' },
-  { id: 'talking', name: 'Talking' },
-  { id: 'thinking', name: 'Thinking' },
-  { id: 'greeting', name: 'Greeting' },
-]
-
 export function BedrockPlayground() {
   const [environment, setEnvironment] = useState<Environment>('test')
   const [_generationType, _setGenerationType] = useState<GenerationType>('image')

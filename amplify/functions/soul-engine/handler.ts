@@ -1,11 +1,14 @@
 import type { SQSEvent, SQSHandler } from 'aws-lambda'
 import { analyzeImage, type ImageAnalysisResult } from './image-analysis'
+import { analyzeProductAnatomy } from './anatomy-analyzer'
 import {
   retrieveActivePromptTemplate,
   processTemplate,
   formatColors,
   formatVibeTags,
   formatAvatarConfig,
+  buildLivingProductPrompt,
+  LIVING_PRODUCT_NEGATIVE_PROMPT,
   type TemplateVariables,
   type AvatarConfig,
 } from './prompt-template'
@@ -38,6 +41,7 @@ import { query, queryOne } from './database'
 interface GenerateCharacterRequest {
   productImage: string // Base64 or URL
   productName: string
+  objectType?: string // For Living Product: e.g. "blender", "chair" — replaces productName in prompt
   characterType: 'mascot' | 'spokesperson' | 'sidekick' | 'expert' | 'avatar'
   characterStyleType?: 'product-morphing' | 'head-only' | 'avatar'
   generationType?: 'tools' | 'genius-avatar' | 'head-only'
@@ -158,32 +162,47 @@ async function handleGenerateCharacterVariations(
       negativePrompt = 'blurry, low quality, distorted, deformed, amateur, childish, meme, cartoonish exaggeration, text, watermark, logo, realistic photo, multiple characters, cropped, out of frame, unprofessional, cheap'
       console.log(`[${jobId}] Using avatar config prompt (${finalPrompt.length} chars)`)
     } else {
-      // Product morphing / head-only: use template
-      const template = await retrieveActivePromptTemplate()
-      console.log(`[${jobId}] Retrieved template: ${template.name} (v${(template as { version?: number }).version})`)
-      const imageAnalysis: ImageAnalysisResult = await analyzeImage(request.productImage)
-      console.log(`[${jobId}] Image analysis complete:`, {
-        category: imageAnalysis.category,
-        colorCount: imageAnalysis.colors.length,
-      })
-      const templateVariables: TemplateVariables = {
-        PRODUCT_NAME: request.productName,
-        CHARACTER_TYPE: request.characterType,
-        PRODUCT_TYPE: imageAnalysis.category,
-        PRODUCT_COLORS: formatColors(imageAnalysis.colors),
-        VIBE_TAGS: formatVibeTags(request.vibeTags),
+      const isLivingProduct = request.characterStyleType === 'product-morphing'
+
+      if (isLivingProduct) {
+        // Living Product: Vision-to-Prompt flow — anatomy analysis → dynamic prompt → IMAGE_VARIATION
+        const anatomy = await analyzeProductAnatomy(request.productImage)
+        console.log(`[${jobId}] Anatomy analysis:`, anatomy)
+        finalPrompt = buildLivingProductPrompt(anatomy)
+        negativePrompt = LIVING_PRODUCT_NEGATIVE_PROMPT
+        console.log(`[${jobId}] Living Product prompt (${finalPrompt.length} chars)`)
+      } else {
+        // Head-only: use template + image analysis
+        const template = await retrieveActivePromptTemplate()
+        console.log(`[${jobId}] Retrieved template: ${template.name} (v${(template as { version?: number }).version})`)
+        const imageAnalysis: ImageAnalysisResult = await analyzeImage(request.productImage)
+        console.log(`[${jobId}] Image analysis complete:`, {
+          category: imageAnalysis.category,
+          colorCount: imageAnalysis.colors.length,
+        })
+        const nameForPrompt = request.objectType ?? request.productName
+        const templateVariables: TemplateVariables = {
+          PRODUCT_NAME: nameForPrompt,
+          CHARACTER_TYPE: request.characterType,
+          PRODUCT_TYPE: imageAnalysis.category,
+          PRODUCT_COLORS: formatColors(imageAnalysis.colors),
+          VIBE_TAGS: formatVibeTags(request.vibeTags),
+        }
+        const processed = processTemplate(template, templateVariables)
+        finalPrompt = processed.prompt
+        negativePrompt = processed.negativePrompt
+        negativePrompt += ', human face, human head, creature face, person, human, anthropomorphic face, facial features'
+        console.log(`[${jobId}] Processed prompt template (${finalPrompt.length} chars)`)
       }
-      const processed = processTemplate(template, templateVariables)
-      finalPrompt = processed.prompt
-      negativePrompt = processed.negativePrompt
-      console.log(`[${jobId}] Processed prompt template (${finalPrompt.length} chars)`)
     }
 
     // Step 5: Generate 3 image variations with unique seeds
-    console.log(`[${jobId}] Generating 3 image variations...`)
+    const useImageVariation = request.characterStyleType === 'product-morphing'
+    console.log(`[${jobId}] Generating 3 image variations...`, useImageVariation ? '(IMAGE_VARIATION)' : '')
     const imageVariations: ImageVariation[] = await generateImageVariations(
       finalPrompt,
-      negativePrompt
+      negativePrompt,
+      useImageVariation ? request.productImage : undefined
     )
     console.log(`[${jobId}] Generated ${imageVariations.length} variations`)
     

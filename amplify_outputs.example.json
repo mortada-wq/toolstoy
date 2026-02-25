@@ -1,0 +1,15 @@
+{
+  "version": "1",
+  "auth": {
+    "user_pool_id": "YOUR_USER_POOL_ID",
+    "user_pool_client_id": "YOUR_CLIENT_ID",
+    "identity_pool_id": "YOUR_IDENTITY_POOL_ID"
+  },
+  "custom": {
+    "API": {
+      "ToolstoyApi": {
+        "endpoint": "YOUR_API_ENDPOINT"
+      }
+    }
+  }
+}

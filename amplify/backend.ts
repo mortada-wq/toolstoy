@@ -193,6 +193,19 @@ httpApi.addRoutes({
   authorizer: userPoolAuthorizer,
 })
 
+httpApi.addRoutes({
+  path: '/api/prompt-templates/{proxy+}',
+  methods: [HttpMethod.ANY],
+  integration: bedrockIntegration,
+  authorizer: userPoolAuthorizer,
+})
+httpApi.addRoutes({
+  path: '/api/prompt-templates',
+  methods: [HttpMethod.GET, HttpMethod.POST, HttpMethod.OPTIONS],
+  integration: bedrockIntegration,
+  authorizer: userPoolAuthorizer,
+})
+
 const apiPolicy = new Policy(apiStack, 'ApiPolicy', {
   statements: [
     new PolicyStatement({

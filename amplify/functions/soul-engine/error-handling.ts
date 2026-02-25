@@ -5,6 +5,8 @@
  * and fallback strategies for generation failures.
  */
 
+import { query } from './database'
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -28,6 +30,117 @@ export interface FallbackResult<T> {
   data?: T
   usedFallback: boolean
   fallbackReason?: string
+}
+
+// ============================================================================
+// Bedrock Error Interface
+// ============================================================================
+
+/**
+ * Structured Bedrock API error with full context for debugging.
+ * Requirements: 1.2, 9.3
+ */
+export interface BedrockError {
+  code: string
+  message: string
+  statusCode: number
+  requestId?: string
+  timestamp: string
+}
+
+// ============================================================================
+// Bedrock Request Validation
+// ============================================================================
+
+/**
+ * Validates Bedrock API request parameters before making the API call.
+ * Requirements: 1.4
+ *
+ * @param prompt - Prompt text to validate
+ * @param width - Image width in pixels
+ * @param height - Image height in pixels
+ * @returns Validation result with errors array
+ */
+export function validateBedrockRequest(
+  prompt: string,
+  width: number,
+  height: number
+): { valid: boolean; errors: string[] } {
+  const errors: string[] = []
+
+  if (!prompt || prompt.trim().length === 0) {
+    errors.push('Prompt must not be empty')
+  }
+
+  if (prompt && prompt.length > 10000) {
+    errors.push(`Prompt exceeds maximum length of 10000 characters (got ${prompt.length})`)
+  }
+
+  if (width < 512 || width > 2048) {
+    errors.push(`Image width must be between 512 and 2048 pixels (got ${width})`)
+  }
+
+  if (height < 512 || height > 2048) {
+    errors.push(`Image height must be between 512 and 2048 pixels (got ${height})`)
+  }
+
+  return { valid: errors.length === 0, errors }
+}
+
+// ============================================================================
+// Bedrock Error Logging
+// ============================================================================
+
+/**
+ * Logs a Bedrock API error with full context for debugging.
+ * Requirements: 1.2, 9.3, 9.4
+ *
+ * @param bedrockError - The Bedrock error details
+ * @param context - Additional context (jobId, personaId, merchantId, templateId)
+ */
+export function logBedrockError(
+  bedrockError: BedrockError,
+  context: {
+    jobId?: string
+    personaId?: string
+    merchantId?: string
+    templateId?: string
+    [key: string]: unknown
+  }
+): void {
+  console.error('BEDROCK_API_ERROR', {
+    timestamp: bedrockError.timestamp,
+    code: bedrockError.code,
+    message: bedrockError.message,
+    statusCode: bedrockError.statusCode,
+    requestId: bedrockError.requestId,
+    jobId: context.jobId,
+    personaId: context.personaId,
+    merchantId: context.merchantId,
+    templateId: context.templateId,
+    ...context,
+  })
+}
+
+/**
+ * AWS SDK error type with metadata for status code and request ID.
+ */
+type AwsSdkError = Error & { $metadata?: { httpStatusCode?: number; requestId?: string } }
+
+/**
+ * Converts a raw AWS SDK error into a BedrockError.
+ *
+ * @param error - Raw error from AWS SDK
+ * @returns Structured BedrockError
+ */
+export function toBedrockError(error: AwsSdkError): BedrockError {
+  return {
+    code: error.name || 'UNKNOWN_ERROR',
+    message: error.message,
+    statusCode: error.$metadata?.httpStatusCode ?? 500,
+    requestId: error.$metadata?.requestId,
+    timestamp: new Date().toISOString(),
+  }
 }
 
 // ============================================================================
@@ -312,9 +425,6 @@ export function handlePartialVideoFailure<T extends { stateName: string }>(
 /**
  * Stores error details in generation_jobs table.
  * 
- * NOTE: This is a placeholder implementation. In production, this should
- * update the database with error information.
- * 
  * @param jobId - Generation job ID
  * @param error - Error to store
  */
@@ -324,29 +434,25 @@ export async function storeErrorInDatabase(
 ): Promise<void> {
   const errorDetails = classifyError(error)
   
-  // TODO: Implement database update
-  // Example SQL:
-  // UPDATE generation_jobs
-  // SET status = 'failed',
-  //     error_message = $1,
-  //     error_code = $2,
-  //     completed_at = NOW()
-  // WHERE id = $3
+  try {
+    await query(
+      `UPDATE generation_jobs
+       SET status = 'failed',
+           error_message = $1,
+           error_code = $2,
+           completed_at = NOW()
+       WHERE id = $3`,
+      [errorDetails.errorMessage, errorDetails.errorCode, jobId]
+    )
+  } catch (dbError) {
+    console.error('Failed to store error in database:', dbError)
+  }
   
-  console.log('Storing error in database (placeholder)', {
-    jobId,
-    errorCode: errorDetails.errorCode,
-    errorMessage: errorDetails.errorMessage,
-  })
-  
-  // Placeholder: Log to CloudWatch instead
   logJobFailure(jobId, error)
 }
 
 /**
  * Marks a job as failed in the database.
- * 
- * NOTE: Placeholder implementation. Should update database in production.
  * 
  * @param jobId - Generation job ID
  * @param errorCode - Error code
@@ -357,12 +463,19 @@ export async function markJobAsFailed(
   errorCode: string,
   errorMessage: string
 ): Promise<void> {
-  // TODO: Implement database update
-  console.log('Marking job as failed (placeholder)', {
-    jobId,
-    errorCode,
-    errorMessage,
-  })
+  try {
+    await query(
+      `UPDATE generation_jobs
+       SET status = 'failed',
+           error_message = $1,
+           error_code = $2,
+           completed_at = NOW()
+       WHERE id = $3`,
+      [errorMessage, errorCode, jobId]
+    )
+  } catch (dbError) {
+    console.error('Failed to mark job as failed in database:', dbError)
+  }
 }
 
 // ============================================================================

@@ -45,11 +45,6 @@ export function AssetPreviewPanel({ asset, onDelete, onUseInGeneration }: AssetP
     })
   }
 
-  const _getFileSize = (_url: string) => {
-    // This is a placeholder - actual size would come from server
-    return 'N/A'
-  }
-
   return (
     <div className="p-6 space-y-4">
       <h3 className="text-[14px] font-semibold text-[#1A1A1A]">Asset Preview</h3>

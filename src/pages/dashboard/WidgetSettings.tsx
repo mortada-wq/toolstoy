@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { CheckIcon, ChevronRightIcon } from '@/components/icons'
 import { usePersonas } from '@/hooks/usePersonas'
+import CharacterWidget from '@/components/CharacterWidget'
+import { SubscriptionTier } from '../../../amplify/functions/soul-engine/animation-states'
 import outputs from '../../../amplify_outputs.json'
 
 const API_BASE = (outputs as { custom?: { API?: Record<string, { endpoint?: string }> } }).custom?.API?.ToolstoyApi?.endpoint?.replace(/\/$/, '') ?? ''
@@ -63,11 +65,40 @@ export function WidgetSettings() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const previewConfig = selectedPersona ? {
+    id: selectedPersona.id,
+    name: selectedPersona.name ?? 'Character',
+    imageUrl: selectedPersona.imageUrl ?? 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&h=400&fit=crop',
+    videoStates: { idle: '', thinking: '', talking: '', greeting: '' },
+    dominantColor: '#5B7C99',
+    capabilities: { visual: { animation: true, showImage: true }, spatial: { positionControl: true, minimizeOption: true } },
+    subscriptionTier: SubscriptionTier.FREE as SubscriptionTier,
+  } : null
+
   return (
-    <div className="p-5 md:p-8">
+    <div className="p-5 md:p-8 space-y-8">
+      {/* TOP: Chat Box Preview */}
+      <div className="bg-white border border-[#E5E7EB] rounded-lg p-8">
+        <h3 className="font-semibold text-base text-[#1A1A1A] mb-2">Preview</h3>
+        <p className="text-[14px] text-[#6B7280] mb-6">
+          See how your widget will look on your site.
+        </p>
+        <div className="flex justify-center items-center min-h-[400px] bg-[#F9FAFB] rounded-lg">
+          {previewConfig ? (
+            <CharacterWidget config={previewConfig} className="shadow-lg" />
+          ) : (
+            <div className="text-center text-[#6B7280]">
+              <p className="font-medium">Create a character first</p>
+              <p className="text-sm mt-1">Go to My guys to create one, then come back here</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* BELOW: Config + Embed Code */}
       <div className="grid grid-cols-1 lg:grid-cols-[3fr,2fr] gap-8">
         {/* Left - Configuration */}
-        <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 order-2 lg:order-1">
+        <div className="bg-white border border-[#E5E7EB] rounded-lg p-8">
           <div>
             <label className="block font-semibold text-[14px] text-[#1A1A1A] mb-2">
               Select Character
@@ -157,8 +188,8 @@ export function WidgetSettings() {
         </div>
 
         {/* Right - Embed Code */}
-        <div className="order-1 lg:order-2">
-          <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 sticky top-24">
+        <div>
+          <div className="bg-white border border-[#E5E7EB] rounded-lg p-8">
             <h3 className="font-semibold text-base text-[#1A1A1A]">Your Embed Code</h3>
             <p className="mt-1.5 text-[14px] text-[#6B7280]">
               Paste this before the closing &lt;/body&gt; tag.

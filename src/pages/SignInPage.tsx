@@ -1,13 +1,23 @@
-import { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { signIn } from 'aws-amplify/auth'
 import logoSrc from '@/assets/Finaltoolstoy.svg'
 
 export function SignInPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/dashboard'
-  const [email, setEmail] = useState('')
+  const stateEmail = (location.state as { email?: string })?.email
+  const [email, setEmail] = useState(stateEmail ?? '')
+  const [verifiedSuccess, setVerifiedSuccess] = useState(false)
+
+  useEffect(() => {
+    if (searchParams.get('verified') === '1') {
+      setVerifiedSuccess(true)
+      setSearchParams({}, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -74,6 +84,18 @@ export function SignInPage() {
         <p className="mt-2 text-[15px] text-[#6B7280] text-center">
           Sign in to your Toolstoy account
         </p>
+
+        {/* Email verified success message */}
+        {verifiedSuccess && (
+          <div className="mt-6 p-3.5 bg-[#F0FDF4] border border-[#86EFAC] rounded-lg flex items-start gap-2">
+            <svg className="w-5 h-5 text-[#22C55E] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-[14px] text-[#22C55E] leading-relaxed">
+              Email verified! Sign in to continue.
+            </p>
+          </div>
+        )}
 
         {/* Error message at top */}
         {error && (
