@@ -2,7 +2,6 @@ import React from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useUser } from '@/context/UserContext'
 import { useMerchant } from '@/hooks/useMerchant'
-import logoSrc from '@/assets/Finaltoolstoy.svg'
 
 interface SidebarProps {
   mobileOpen: boolean
@@ -119,24 +118,24 @@ export function Sidebar({ mobileOpen, onClose, isAdmin }: SidebarProps) {
         />
       )}
       <aside
-        className={`fixed top-0 left-0 h-full w-[240px] bg-white border-r border-[#E5E7EB] z-50 flex flex-col transition-transform duration-200 md:translate-x-0 ${
+        className={`fixed top-0 left-0 h-full w-[240px] bg-toolstoy-bg-secondary border-r border-toolstoy-steelBlue/15 z-50 flex flex-col transition-transform duration-200 md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Logo */}
+        {/* Logo - design system */}
         <Link to={isAdmin ? '/admin' : '/dashboard'} className="px-5 py-6" onClick={() => onClose()}>
           <img
-            src={logoSrc}
-            alt="toolstoy"
-            className="h-[19.2px] w-auto object-contain brightness-0"
+            src="/logos/logo-darkmode.svg"
+            alt="Toolstoy"
+            className="h-8 w-auto object-contain min-w-[100px]"
           />
         </Link>
-        <div className="h-px bg-[#E5E7EB]" />
+        <div className="h-px bg-toolstoy-steelBlue/15" />
 
         {/* Section label for admin */}
         {isAdmin && (
           <div className="px-5 pt-4 pb-1">
-            <span className="font-medium text-[10px] text-[#6B7280] uppercase tracking-wider">Toolstizer</span>
+            <span className="font-semibold text-[11px] text-toolstoy-steelBlue uppercase tracking-wider">Toolstizer</span>
           </div>
         )}
 
@@ -149,16 +148,16 @@ export function Sidebar({ mobileOpen, onClose, isAdmin }: SidebarProps) {
                 key={link.href}
                 to={link.href}
                 onClick={() => onClose()}
-                className={`flex items-center h-11 px-4 gap-2.5 mx-2 rounded-lg transition-all duration-200 ${
+                className={`flex items-center h-11 px-4 gap-2.5 mx-2 rounded-toolstoy-md transition-all duration-200 ${
                   isActive
-                    ? 'text-[#1A1A1A] bg-[#F5F5F5]'
-                    : 'text-[#6B7280] hover:text-[#1A1A1A] hover:bg-[#F5F5F5]'
+                    ? 'text-toolstoy-cream bg-toolstoy-bg-overlay'
+                    : 'text-toolstoy-slateText hover:text-toolstoy-cream hover:bg-toolstoy-bg-overlay/60'
                 }`}
               >
                 <Icon name={link.icon} />
-                <span className="font-medium text-sm">{link.label}</span>
+                <span className="font-medium text-[15px]">{link.label}</span>
                 {link.comingSoon && (
-                  <span className="ml-auto bg-[#F5F5F5] text-[#6B7280] font-medium text-[14px] px-2 py-0.5 rounded-[20px]">
+                  <span className="ml-auto bg-toolstoy-bg-overlay/60 text-toolstoy-steelBlue font-medium text-[13px] px-2 py-0.5 rounded-full">
                     Coming Soon
                   </span>
                 )}
@@ -170,15 +169,15 @@ export function Sidebar({ mobileOpen, onClose, isAdmin }: SidebarProps) {
         {/* User section */}
         {user && (
           <>
-            <div className="h-px bg-[#E5E7EB]" />
+            <div className="h-px bg-toolstoy-steelBlue/15" />
             <div className="p-4">
               <div className="flex flex-col items-start gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white font-semibold text-xs shrink-0">
+                <div className="w-8 h-8 rounded-full bg-toolstoy-orange flex items-center justify-center text-toolstoy-cream font-semibold text-xs shrink-0">
                   {(user.name ?? user.email ?? 'U').slice(0, 2).toUpperCase()}
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-medium text-[14px] text-[#1A1A1A]">{user.name ?? user.email}</p>
-                  <span className="bg-[#F5F5F5] text-[#6B7280] font-medium text-[14px] px-2 py-0.5 rounded-full">
+                  <p className="font-medium text-[15px] text-toolstoy-cream">{user.name ?? user.email}</p>
+                  <span className="bg-toolstoy-bg-overlay/60 text-toolstoy-steelBlue font-medium text-[13px] px-2 py-0.5 rounded-full">
                     {isAdmin ? 'Toolstizer' : (merchant?.plan ? merchant.plan.charAt(0).toUpperCase() + merchant.plan.slice(1) : 'Free')}
                   </span>
                 </div>
@@ -188,7 +187,7 @@ export function Sidebar({ mobileOpen, onClose, isAdmin }: SidebarProps) {
                   <Link
                     to="/admin"
                     onClick={() => onClose()}
-                    className="text-[13px] text-[#6B7280] hover:text-[#1A1A1A] transition-colors"
+                    className="text-[13px] text-toolstoy-slateText hover:text-toolstoy-cream transition-colors"
                   >
                     Admin Dashboard →
                   </Link>
@@ -197,14 +196,14 @@ export function Sidebar({ mobileOpen, onClose, isAdmin }: SidebarProps) {
                   <Link
                     to="/dashboard"
                     onClick={() => onClose()}
-                    className="text-[13px] text-[#6B7280] hover:text-[#1A1A1A] transition-colors"
+                    className="text-[13px] text-toolstoy-slateText hover:text-toolstoy-cream transition-colors"
                   >
                     ← Merchant Dashboard
                   </Link>
                 )}
                 <button
                   type="button"
-                  className="text-[13px] text-[#6B7280] hover:text-[#1A1A1A] transition-colors text-left"
+                  className="text-[13px] text-toolstoy-slateText hover:text-toolstoy-cream transition-colors text-left"
                   onClick={() => {
                     onClose()
                     void handleSignOut()

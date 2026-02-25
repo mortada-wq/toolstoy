@@ -32,15 +32,12 @@ export function DashboardShell() {
 
   const title = getPageTitle(location.pathname)
 
-  const adminGrayBg = 'bg-[#E8E8E8]'
-  const userBg = 'bg-[#F5F5F5]'
-
   return (
-    <div className={`min-h-screen ${isAdmin ? adminGrayBg : userBg}`}>
+    <div className="min-h-screen bg-toolstoy-bg-primary">
       <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} isAdmin={isAdmin} />
       <div className="md:pl-[240px] min-h-screen flex flex-col">
         <Topbar title={title} onMenuClick={() => setSidebarOpen(true)} isAdmin={isAdmin} />
-        <main className={`flex-1 ${isAdmin ? 'bg-[#E0E0E0]' : ''}`}>
+        <main className="flex-1 bg-toolstoy-bg-primary">
           <Outlet />
         </main>
       </div>

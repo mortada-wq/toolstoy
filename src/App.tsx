@@ -39,8 +39,8 @@ const PromptTemplateManager = lazy(() => import('./pages/admin/PromptTemplateMan
 
 function PageFallback() {
   return (
-    <div className="min-h-[40vh] flex items-center justify-center bg-[#F5F5F5]">
-      <div className="animate-pulse w-full max-w-md h-64 bg-[#E5E7EB] rounded-lg" />
+    <div className="min-h-[40vh] flex items-center justify-center bg-toolstoy-bg-primary">
+      <div className="animate-pulse w-full max-w-md h-64 bg-toolstoy-bg-overlay rounded-toolstoy-lg" />
     </div>
   )
 }

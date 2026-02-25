@@ -17,12 +17,12 @@ interface ShowcaseProps {
 
 export function Showcase({ onCardClick }: ShowcaseProps) {
   return (
-    <section id="showcase" className="scroll-mt-20 px-4 md:px-6 py-16 sm:py-[60px] lg:py-[100px] bg-toolstoy-canvas">
+    <section id="showcase" className="scroll-mt-20 px-4 md:px-6 py-16 sm:py-[60px] lg:py-[100px] bg-toolstoy-bg-secondary">
       <div className="max-w-[1200px] mx-auto">
-        <h2 className="text-[30px] sm:text-[44px] font-normal text-toolstoy-nearblack text-center">
+        <h2 className="text-[30px] sm:text-[44px] font-normal text-toolstoy-cream text-center">
           See It In Action
         </h2>
-        <p className="text-lg text-toolstoy-muted text-center mt-2 font-normal">
+        <p className="text-lg text-toolstoy-slateText text-center mt-2 font-normal">
           Click any character to have a real conversation.
         </p>
 

@@ -1,0 +1,16 @@
+---
+You are building Toolstoy — a premium minimalist AI chat character creation app at toolstoy.app.
+
+Always follow DESIGN.md for all UI decisions.
+Always use design-tokens.json for all color, spacing, radius, and animation values.
+Never use hardcoded hex values — always reference token names or their exact values from design-tokens.json.
+Never use gradients in UI components. Gradients exist only in the logo SVGs.
+Never use pure white (#ffffff) — use #FDF0E0 (Warm Cream).
+Never use pure black — use #2E3340 (Charcoal Slate).
+All spacing must be multiples of 8px.
+All icons must be Lucide, outlined style, 1.5px stroke weight.
+Primary font is Plus Jakarta Sans, fallback is Inter.
+Border radius: 16px for cards, 9999px for buttons and avatars.
+No drop shadows heavier than 8% opacity except teal and orange glows.
+All buttons are pill-shaped, font-weight 600, font-size 15px.
+---

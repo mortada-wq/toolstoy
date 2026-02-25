@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useUser } from '@/context/UserContext'
 import { Hero } from '../components/Hero'
 import { Showcase } from '../components/Showcase'
 import { DemoModal } from '../components/DemoModal'
@@ -18,7 +20,16 @@ const LAYOUTS: LayoutType[] = [
 ]
 
 export function HomePage() {
+  const navigate = useNavigate()
+  const { isAuthenticated, isLoading } = useUser()
   const [selectedCard, setSelectedCard] = useState<number | null>(null)
+
+  // Signed in → go to dashboard
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [isLoading, isAuthenticated, navigate])
 
   return (
     <>

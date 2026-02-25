@@ -1,13 +1,21 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { signIn } from 'aws-amplify/auth'
-import logoSrc from '@/assets/Finaltoolstoy.svg'
+import { useUser } from '@/context/UserContext'
 
 export function SignInPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isAuthenticated, isLoading: authLoading, refreshUser } = useUser()
   const [searchParams, setSearchParams] = useSearchParams()
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/dashboard'
+
+  // Already signed in → go straight to dashboard
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate(from, { replace: true })
+    }
+  }, [authLoading, isAuthenticated, navigate, from])
   const stateEmail = (location.state as { email?: string })?.email
   const [email, setEmail] = useState(stateEmail ?? '')
   const [verifiedSuccess, setVerifiedSuccess] = useState(false)
@@ -35,9 +43,7 @@ export function SignInPage() {
     setIsLoading(true)
     try {
       const { nextStep } = await signIn({ username: email.trim(), password })
-      
-      console.log('Sign in next step:', nextStep) // Debug log
-      
+
       if (nextStep.signInStep === 'DONE') {
         navigate(from, { replace: true })
       } else if (nextStep.signInStep === 'CONFIRM_SIGN_UP') {
@@ -46,52 +52,69 @@ export function SignInPage() {
       } else {
         setError('Additional verification required. Please check your email or contact support.')
       }
-    } catch (err: any) {
-      console.error('Sign in error:', err) // Debug log
-      
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : ''
+      const errObj = err as { name?: string }
+      const isAlreadySignedIn =
+        errObj?.name === 'UserAlreadyAuthenticatedException' ||
+        msg.includes('already a signed in user') ||
+        msg.includes('signed in user')
+
+      if (isAlreadySignedIn) {
+        await refreshUser()
+        navigate(from, { replace: true })
+        return
+      }
+
       // Better error messages based on error type
-      if (err.name === 'UserNotFoundException' || err.name === 'NotAuthorizedException') {
+      if (errObj?.name === 'UserNotFoundException' || errObj?.name === 'NotAuthorizedException') {
         setError('Incorrect email or password. Please try again.')
-      } else if (err.name === 'UserNotConfirmedException') {
+      } else if (errObj?.name === 'UserNotConfirmedException') {
         setError('Please verify your email first.')
         setTimeout(() => {
           navigate(`/verify?email=${encodeURIComponent(email.trim())}`)
         }, 2000)
       } else {
-        setError(err.message || 'Sign in failed. Please try again.')
+        setError(err instanceof Error ? err.message : 'Sign in failed. Please try again.')
       }
     } finally {
       setIsLoading(false)
     }
   }
 
+  if (authLoading || isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-toolstoy-bg-primary">
+        <div className="w-8 h-8 rounded-full border-2 border-toolstoy-orange border-t-transparent animate-spin" aria-label="Loading" />
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5] font-inter">
-      <div className="bg-white rounded-lg p-8 md:p-12 w-[92vw] md:w-[440px] shadow-toolstoy max-w-[440px]">
+    <div className="min-h-screen flex items-center justify-center bg-toolstoy-bg-primary font-inter">
+      <div className="bg-toolstoy-bg-secondary border border-toolstoy-steelBlue/15 rounded-toolstoy-lg p-8 md:p-12 w-[92vw] md:w-[440px] shadow-toolstoy-md max-w-[440px]">
         <div className="flex justify-center mb-8">
-          <div className="bg-toolstoy-charcoal rounded-lg px-5 py-3">
-            <img
-              src={logoSrc}
-              alt="toolstoy"
-              className="h-[19.2px] w-auto object-contain brightness-0 invert"
-            />
-          </div>
+          <img
+            src="/logos/logo-darkmode.svg"
+            alt="Toolstoy"
+            className="h-8 w-auto object-contain min-w-[100px]"
+          />
         </div>
 
-        <h1 className="text-[28px] font-bold text-[#1A1A1A] text-center">
+        <h1 className="text-[28px] font-bold text-toolstoy-cream text-center">
           Welcome back
         </h1>
-        <p className="mt-2 text-[15px] text-[#6B7280] text-center">
+        <p className="mt-2 text-[15px] text-toolstoy-slateText text-center">
           Sign in to your Toolstoy account
         </p>
 
         {/* Email verified success message */}
         {verifiedSuccess && (
-          <div className="mt-6 p-3.5 bg-[#F0FDF4] border border-[#86EFAC] rounded-lg flex items-start gap-2">
-            <svg className="w-5 h-5 text-[#22C55E] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mt-6 p-3.5 bg-toolstoy-teal/20 border border-toolstoy-teal/40 rounded-toolstoy-md flex items-start gap-2">
+            <svg className="w-5 h-5 text-toolstoy-teal flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-[14px] text-[#22C55E] leading-relaxed">
+            <p className="text-[14px] text-toolstoy-teal leading-relaxed">
               Email verified! Sign in to continue.
             </p>
           </div>
@@ -99,11 +122,11 @@ export function SignInPage() {
 
         {/* Error message at top */}
         {error && (
-          <div className="mt-6 p-3.5 bg-[#FEF2F2] border border-[#FCA5A5] rounded-lg flex items-start gap-2">
-            <svg className="w-5 h-5 text-[#EF4444] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mt-6 p-3.5 bg-toolstoy-coral/20 border border-toolstoy-coral/40 rounded-toolstoy-md flex items-start gap-2">
+            <svg className="w-5 h-5 text-toolstoy-coral flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-[14px] text-[#EF4444] leading-relaxed">
+            <p className="text-[14px] text-toolstoy-coral leading-relaxed">
               {error}
             </p>
           </div>
@@ -111,7 +134,7 @@ export function SignInPage() {
 
         <form className="mt-8" onSubmit={handleSubmit}>
           <div>
-            <label className="block font-medium text-[14px] text-[#1A1A1A] mb-1.5">
+            <label className="block font-medium text-[14px] text-toolstoy-cream mb-1.5">
               Email
             </label>
             <input
@@ -122,17 +145,17 @@ export function SignInPage() {
                 setEmail(e.target.value)
                 setError('') // Clear error on input
               }}
-              className={`w-full border rounded-lg px-3.5 py-3 text-[15px] font-normal focus:outline-none transition-all duration-200 ${
+              className={`w-full border rounded-toolstoy-md px-4 py-3 text-[15px] font-normal text-toolstoy-cream placeholder:text-toolstoy-steelBlue focus:outline-none transition-all duration-200 bg-toolstoy-bg-overlay ${
                 error && !email.trim()
-                  ? 'border-[#EF4444] bg-[#FEF2F2] focus:border-[#EF4444]'
-                  : 'border-[#E5E7EB] focus:border-[#1A1A1A] focus:ring-2 focus:ring-[#1A1A1A]/10'
+                  ? 'border-toolstoy-coral focus:border-toolstoy-coral'
+                  : 'border-toolstoy-steelBlue/25 focus:border-toolstoy-teal/60 focus:ring-2 focus:ring-toolstoy-teal/20'
               }`}
               required
             />
           </div>
 
           <div className="mt-4">
-            <label className="block font-medium text-[14px] text-[#1A1A1A] mb-1.5">
+            <label className="block font-medium text-[14px] text-toolstoy-cream mb-1.5">
               Password
             </label>
             <div className="relative">
@@ -144,17 +167,17 @@ export function SignInPage() {
                   setPassword(e.target.value)
                   setError('') // Clear error on input
                 }}
-                className={`w-full border rounded-lg px-3.5 py-3 pr-11 text-[15px] font-normal focus:outline-none transition-all duration-200 ${
+                className={`w-full border rounded-toolstoy-md px-4 py-3 pr-11 text-[15px] font-normal text-toolstoy-cream placeholder:text-toolstoy-steelBlue focus:outline-none transition-all duration-200 bg-toolstoy-bg-overlay ${
                   error && !password
-                    ? 'border-[#EF4444] bg-[#FEF2F2] focus:border-[#EF4444]'
-                    : 'border-[#E5E7EB] focus:border-[#1A1A1A] focus:ring-2 focus:ring-[#1A1A1A]/10'
+                    ? 'border-toolstoy-coral focus:border-toolstoy-coral'
+                    : 'border-toolstoy-steelBlue/25 focus:border-toolstoy-teal/60 focus:ring-2 focus:ring-toolstoy-teal/20'
                 }`}
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1A1A1A] transition-colors p-1"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-toolstoy-slateText hover:text-toolstoy-cream transition-colors p-1"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
@@ -171,7 +194,7 @@ export function SignInPage() {
             </div>
             <Link
               to="/forgot-password"
-              className="block text-right mt-2 text-[14px] text-[#6B7280] hover:text-[#1A1A1A] transition-all duration-200"
+              className="block text-right mt-2 text-[14px] text-toolstoy-slateText hover:text-toolstoy-cream transition-all duration-200"
             >
               Forgot password?
             </Link>
@@ -180,7 +203,7 @@ export function SignInPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full mt-6 bg-[#1A1A1A] text-white font-semibold text-[15px] py-3.5 rounded-lg transition-all duration-200 hover:bg-[#2A2A2A] hover:shadow-lg active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#1A1A1A] disabled:hover:shadow-none"
+            className="w-full mt-6 bg-toolstoy-orange text-toolstoy-cream font-semibold text-[15px] py-3.5 rounded-full transition-all duration-200 hover:shadow-orange-glow active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
           >
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
@@ -197,14 +220,14 @@ export function SignInPage() {
         </form>
 
         <div className="mt-8 flex items-center gap-4">
-          <div className="flex-1 h-px bg-[#E5E7EB]" />
-          <span className="text-sm text-[#6B7280]">or</span>
-          <div className="flex-1 h-px bg-[#E5E7EB]" />
+          <div className="flex-1 h-px bg-toolstoy-steelBlue/15" />
+          <span className="text-sm text-toolstoy-slateText">or</span>
+          <div className="flex-1 h-px bg-toolstoy-steelBlue/15" />
         </div>
 
-        <p className="mt-6 mb-2 text-center text-[14px] text-[#6B7280]">
+        <p className="mt-6 mb-2 text-center text-[14px] text-toolstoy-slateText">
           Don&apos;t have an account?{' '}
-          <Link to="/signup" className="text-[#1A1A1A] font-medium underline hover:no-underline transition-all duration-200">
+          <Link to="/signup" className="text-toolstoy-cream font-medium underline hover:no-underline transition-all duration-200">
             Start free
           </Link>
         </p>

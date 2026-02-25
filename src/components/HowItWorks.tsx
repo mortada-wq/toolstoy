@@ -22,12 +22,12 @@ export function HowItWorks() {
   ]
 
   return (
-    <section className="px-4 md:px-6 py-16 sm:py-[60px] lg:py-[100px] bg-toolstoy-canvas">
+    <section className="px-4 md:px-6 py-16 sm:py-[60px] lg:py-[100px] bg-toolstoy-bg-primary">
       <div className="max-w-[900px] mx-auto">
-        <h2 className="text-[30px] sm:text-[44px] font-bold text-[#1A1A1A] text-center">
+        <h2 className="text-[30px] sm:text-[44px] font-bold text-toolstoy-cream text-center">
           From Product to Personality.
         </h2>
-        <p className="text-lg text-toolstoy-muted text-center mt-2 font-normal">
+        <p className="text-lg text-toolstoy-slateText text-center mt-2 font-normal">
           Three steps. No technical knowledge required.
         </p>
 
@@ -35,13 +35,13 @@ export function HowItWorks() {
           {steps.map((step, index) => (
             <ScrollReveal key={step.number} delay={index * 100}>
             <div className="group flex-1 relative min-w-0">
-              <span className="absolute -top-2 left-0 font-mono font-bold text-[96px] text-[#EBEBEB] leading-none select-none -z-0 group-hover:text-[#D8D8D8] transition-colors duration-[400ms]">
+              <span className="absolute -top-2 left-0 font-mono font-bold text-[96px] text-toolstoy-steelBlue/20 leading-none select-none -z-0 group-hover:text-toolstoy-steelBlue/30 transition-colors duration-[400ms]">
                 {step.number}
               </span>
-              <h3 className="relative z-10 font-normal text-[22px] text-toolstoy-nearblack -mt-1">
+              <h3 className="relative z-10 font-normal text-[22px] text-toolstoy-cream -mt-1">
                 {step.title}
               </h3>
-              <p className="mt-3 text-base text-toolstoy-muted leading-relaxed font-normal">
+              <p className="mt-3 text-base text-toolstoy-slateText leading-relaxed font-normal">
                 {step.description}
               </p>
             </div>
