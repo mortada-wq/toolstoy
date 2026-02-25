@@ -1,12 +1,17 @@
-import { type ButtonHTMLAttributes, type AnchorHTMLAttributes, forwardRef } from 'react'
+import { forwardRef, type ButtonHTMLAttributes, type AnchorHTMLAttributes } from 'react'
 import { Link } from 'react-router-dom'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'light'
+// design-tokens.json → components.button
+// All buttons are pill-shaped (border-radius: 9999px). No exceptions.
+// Orange is action-only. Secondary uses teal. Ghost uses slate-text.
+
+type Variant = 'primary' | 'secondary' | 'ghost'
 type Size = 'sm' | 'md' | 'lg'
 
 interface BaseButtonProps {
   variant?: Variant
   size?: Size
+  /** false = full width */
   intrinsic?: boolean
   children: React.ReactNode
   className?: string
@@ -32,19 +37,23 @@ type ButtonAsAnchor = BaseButtonProps &
 
 export type ButtonProps = ButtonAsButton | ButtonAsLink | ButtonAsAnchor
 
-const sizeClasses: Record<Size, string> = {
-  sm: 'px-6 py-2.5 text-[14px]',
-  md: 'px-8 py-3 text-[15px]',
-  lg: 'px-10 py-3.5 text-base',
+// Padding uses 8px-unit scale: sm=8/16, md=12/24, lg=16/32
+const sizes: Record<Size, string> = {
+  sm: 'px-4 py-2 text-ds-sm min-h-[36px]',
+  md: 'px-6 py-3 text-ds-base min-h-[44px]',
+  lg: 'px-8 py-4 text-ds-md  min-h-[52px]',
 }
 
-const variantClasses: Record<Variant, string> = {
+// primary   → orange bg + cream text  (CTA — orange is action-only)
+// secondary → transparent + teal border + teal text
+// ghost     → transparent, no border, slate-text (nav / low-hierarchy)
+const variants: Record<Variant, string> = {
   primary:
-    'bg-toolstoy-charcoal text-white font-semibold hover:bg-[#282C34] shadow-[0_1px_0_rgba(255,255,255,0.08)_inset]',
+    'bg-orange text-cream font-semibold hover:shadow-orange-glow active:scale-[0.97]',
   secondary:
-    'bg-white text-toolstoy-nearblack font-semibold border border-toolstoy-border hover:bg-[#F5F5F5]',
-  light: 'bg-white text-toolstoy-nearblack font-semibold hover:bg-[#F5F5F5]',
-  ghost: 'bg-transparent text-toolstoy-nearblack font-medium hover:bg-toolstoy-softgrey',
+    'bg-transparent border border-teal/40 text-teal font-semibold hover:border-teal/70 hover:shadow-teal-glow active:scale-[0.97]',
+  ghost:
+    'bg-transparent text-slate-text font-medium hover:text-cream hover:bg-bg-overlay active:scale-[0.97]',
 }
 
 export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
@@ -57,17 +66,17 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
       className = '',
       ...props
     },
-    ref
+    ref,
   ) => {
-    const baseClasses =
-      'rounded-lg transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center justify-center min-h-[44px] hover:scale-[1.02] active:scale-[0.98]'
-    const widthClass = intrinsic ? 'w-fit' : 'w-full'
-    const classes = `${baseClasses} ${widthClass} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`
+    const base =
+      'rounded-full inline-flex items-center justify-center transition-all duration-normal ease-default disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:active:scale-100 select-none'
+    const width = intrinsic ? 'w-fit' : 'w-full'
+    const cls = `${base} ${width} ${sizes[size]} ${variants[variant]} ${className}`
 
     if ('to' in props && props.to) {
       const { to, ...rest } = props
       return (
-        <Link to={to} className={classes} {...(rest as AnchorHTMLAttributes<HTMLAnchorElement>)}>
+        <Link to={to} className={cls} {...(rest as AnchorHTMLAttributes<HTMLAnchorElement>)}>
           {children}
         </Link>
       )
@@ -76,7 +85,7 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     if ('href' in props && props.href) {
       const { href, ...rest } = props
       return (
-        <a href={href} className={classes} {...(rest as AnchorHTMLAttributes<HTMLAnchorElement>)}>
+        <a href={href} className={cls} {...(rest as AnchorHTMLAttributes<HTMLAnchorElement>)}>
           {children}
         </a>
       )
@@ -84,11 +93,16 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
 
     const { ...rest } = props as ButtonHTMLAttributes<HTMLButtonElement>
     return (
-      <button type="button" className={classes} ref={ref as React.Ref<HTMLButtonElement>} {...rest}>
+      <button
+        type="button"
+        className={cls}
+        ref={ref as React.Ref<HTMLButtonElement>}
+        {...rest}
+      >
         {children}
       </button>
     )
-  }
+  },
 )
 
 Button.displayName = 'Button'

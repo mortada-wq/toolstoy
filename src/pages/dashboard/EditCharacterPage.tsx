@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Copy, Check } from 'lucide-react'
 import {
   getPersona,
   updatePersona,
@@ -9,34 +10,26 @@ import {
 } from '@/lib/data'
 import type { PersonaRecord } from '@/lib/data'
 import outputs from '../../../amplify_outputs.json'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { Input } from '@/components/ui/Input'
+import { Avatar } from '@/components/ui/Avatar'
 
-const API_BASE = (outputs as { custom?: { API?: Record<string, { endpoint?: string }> } }).custom?.API?.ToolstoyApi?.endpoint?.replace(/\/$/, '') ?? ''
+const API_BASE =
+  (outputs as { custom?: { API?: Record<string, { endpoint?: string }> } }).custom?.API
+    ?.ToolstoyApi?.endpoint?.replace(/\/$/, '') ?? ''
 
-const LAYOUTS = [
-  'Side by Side',
-  'Character Top',
-  'Chat Focus',
-  'Mirror',
-  'Immersive',
-  'Compact',
-  'Cinematic',
-]
-
+const LAYOUTS = ['Side by Side', 'Character Top', 'Chat Focus', 'Mirror', 'Immersive', 'Compact', 'Cinematic']
 const POSITIONS = ['Bottom Right', 'Bottom Left', 'Top Right', 'Top Left']
-
 const TRIGGERS = [
   { id: 'immediate', label: 'Open immediately on page load' },
-  { id: 'delay', label: 'Open after 45 seconds' },
-  { id: 'click', label: 'Wait for customer to click' },
+  { id: 'delay',     label: 'Open after 45 seconds' },
+  { id: 'click',     label: 'Wait for customer to click' },
 ]
 
 function buildEmbedCode(token: string, position: string, apiBase: string): string {
   const api = apiBase ? ` data-api="${apiBase}"` : ''
-  return `<script
-  src="https://cdn.toolstoy.app/widget.js"
-  data-persona="${token}"
-  data-position="${position.toLowerCase().replace(/\s/g, '-')}"${api}
-></script>`
+  return `<script\n  src="https://cdn.toolstoy.app/widget.js"\n  data-persona="${token}"\n  data-position="${position.toLowerCase().replace(/\s/g, '-')}"${api}\n></script>`
 }
 
 interface KnowledgeItemRecord {
@@ -48,6 +41,81 @@ interface KnowledgeItemRecord {
   approved?: boolean | null
 }
 
+// ── Personality slider ─────────────────────────────────────────────────────
+function PersonalitySlider({
+  leftLabel,
+  rightLabel,
+  value,
+  onChange,
+}: {
+  leftLabel: string
+  rightLabel: string
+  value: number
+  onChange: (v: number) => void
+}) {
+  return (
+    <div className="flex items-center gap-4">
+      <span className="w-24 text-ds-sm text-steel-blue text-right">{leftLabel}</span>
+      <div className="flex-1 relative">
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className={[
+            'w-full h-1.5 rounded-full appearance-none cursor-pointer',
+            'bg-bg-overlay',
+            // Webkit thumb — orange, circle
+            '[&::-webkit-slider-thumb]:appearance-none',
+            '[&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4',
+            '[&::-webkit-slider-thumb]:rounded-full',
+            '[&::-webkit-slider-thumb]:bg-orange',
+            '[&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-bg-secondary',
+            '[&::-webkit-slider-thumb]:shadow-orange-glow/50',
+            // Firefox thumb
+            '[&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4',
+            '[&::-moz-range-thumb]:rounded-full',
+            '[&::-moz-range-thumb]:bg-orange',
+            '[&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-bg-secondary',
+          ].join(' ')}
+          style={{
+            background: `linear-gradient(to right, #FF7A2F ${value}%, #1E2330 ${value}%)`,
+          }}
+        />
+      </div>
+      <span className="w-24 text-ds-sm text-steel-blue">{rightLabel}</span>
+    </div>
+  )
+}
+
+// ── Teal toggle switch ─────────────────────────────────────────────────────
+function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <label className="flex items-center gap-3 cursor-pointer select-none">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={[
+          'relative w-10 h-6 rounded-full transition-colors duration-normal',
+          checked ? 'bg-teal' : 'bg-bg-overlay border border-border/25',
+        ].join(' ')}
+      >
+        <span
+          className={[
+            'absolute top-1 w-4 h-4 rounded-full bg-cream shadow-sm transition-transform duration-normal',
+            checked ? 'translate-x-5' : 'translate-x-1',
+          ].join(' ')}
+        />
+      </button>
+      <span className="text-ds-sm text-slate-text">{label}</span>
+    </label>
+  )
+}
+
+// ── Main component ─────────────────────────────────────────────────────────
 export function EditCharacterPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -91,7 +159,7 @@ export function EditCharacterPage() {
           setWidgetLayout(p.widgetLayout ?? 'Side by Side')
           setWidgetPosition(p.widgetPosition ?? 'Bottom Right')
           setWidgetTrigger(
-            p.widgetTrigger === '0-seconds' ? 'immediate' : p.widgetTrigger === 'on-click' ? 'click' : 'delay'
+            p.widgetTrigger === '0-seconds' ? 'immediate' : p.widgetTrigger === 'on-click' ? 'click' : 'delay',
           )
         }
       })
@@ -120,7 +188,7 @@ export function EditCharacterPage() {
       setDetailsSaved(true)
       setTimeout(() => setDetailsSaved(false), 2000)
     } catch {
-      // error
+      // silent — could wire up error state
     } finally {
       setDetailsSaving(false)
     }
@@ -133,40 +201,28 @@ export function EditCharacterPage() {
       setKnowledge((prev) => [...prev, item as KnowledgeItemRecord])
       setNewQuestion('')
       setNewAnswer('')
-    } catch {
-      // error
-    }
+    } catch { /* silent */ }
   }
 
   const handleDeleteQa = async (itemId: string) => {
     try {
       await deleteKnowledgeItem(itemId)
       setKnowledge((prev) => prev.filter((k) => k.id !== itemId))
-    } catch {
-      // error
-    }
+    } catch { /* silent */ }
   }
 
   const handleSaveWidget = async () => {
     if (!id) return
     setWidgetSaving(true)
     try {
-      const triggerMap: Record<string, string> = {
-        immediate: '0-seconds',
-        delay: '45-seconds',
-        click: 'on-click',
-      }
+      const triggerMap: Record<string, string> = { immediate: '0-seconds', delay: '45-seconds', click: 'on-click' }
       await updatePersona(id, {
-        widgetLayout: widgetLayout,
-        widgetPosition: widgetPosition,
+        widgetLayout,
+        widgetPosition,
         widgetTrigger: triggerMap[widgetTrigger] ?? widgetTrigger,
       })
-      setPersona((p) =>
-        p ? { ...p, widgetLayout, widgetPosition, widgetTrigger: triggerMap[widgetTrigger] ?? widgetTrigger } : p
-      )
-    } catch {
-      // error
-    } finally {
+      setPersona((p) => p ? { ...p, widgetLayout, widgetPosition, widgetTrigger: triggerMap[widgetTrigger] ?? widgetTrigger } : p)
+    } catch { /* silent */ } finally {
       setWidgetSaving(false)
     }
   }
@@ -175,7 +231,7 @@ export function EditCharacterPage() {
     (k) =>
       !qaSearch ||
       k.question.toLowerCase().includes(qaSearch.toLowerCase()) ||
-      k.answer.toLowerCase().includes(qaSearch.toLowerCase())
+      k.answer.toLowerCase().includes(qaSearch.toLowerCase()),
   )
 
   const embedToken = persona?.embedToken ?? 'ts_xxxxxxxxxxxxxxxx'
@@ -192,303 +248,304 @@ export function EditCharacterPage() {
     return null
   }
 
+  // ── Loading ──
   if (isLoading) {
     return (
-      <div className="p-8 bg-[#F5F5F5] min-h-[60vh] flex items-center justify-center">
-        <div className="animate-pulse w-full max-w-2xl h-96 bg-[#E5E7EB] rounded-lg" />
+      <div className="p-8 min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-orange border-t-transparent animate-spin" />
       </div>
     )
   }
 
+  // ── Not found ──
   if (!persona) {
     return (
-      <div className="p-8 bg-[#F5F5F5] min-h-[60vh] flex flex-col items-center justify-center">
-        <p className="text-[15px] text-[#6B7280]">Character not found.</p>
-        <Link to="/dashboard/characters" className="mt-4 text-[14px] text-[#1A1A1A] font-medium underline">
+      <div className="p-8 min-h-[60vh] flex flex-col items-center justify-center gap-4">
+        <p className="text-ds-base text-slate-text">Character not found.</p>
+        <Button to="/dashboard/characters" variant="ghost" size="sm">
+          <ArrowLeft className="w-4 h-4 mr-2" strokeWidth={1.5} />
           Back to Characters
-        </Link>
+        </Button>
       </div>
     )
   }
 
-  const tabs = [
-    { id: 'details' as const, label: 'Details' },
-    { id: 'knowledge' as const, label: 'Knowledge Base' },
-    { id: 'widget' as const, label: 'Widget' },
+  const tabs: { id: typeof activeTab; label: string }[] = [
+    { id: 'details',   label: 'Details' },
+    { id: 'knowledge', label: 'Knowledge Base' },
+    { id: 'widget',    label: 'Widget' },
   ]
 
   return (
-    <div className="p-6 md:p-8 bg-[#F5F5F5]">
-      <div className="flex items-center gap-4 mb-6">
+    <div className="p-6 md:p-8">
+      {/* Back + title */}
+      <div className="flex items-center gap-4 mb-8">
         <Link
           to="/dashboard/characters"
-          className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A] font-medium"
+          className="flex items-center gap-1.5 text-ds-sm text-steel-blue font-medium hover:text-cream transition-colors duration-normal"
         >
+          <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
           Back
         </Link>
-        <h2 className="font-bold text-[22px] text-[#1A1A1A]">Edit {persona.name ?? 'Character'}</h2>
+        <span className="text-border/20">/</span>
+        <h2 className="font-bold text-ds-xl text-cream">Edit {persona.name ?? 'Character'}</h2>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[3fr,2fr] gap-8">
-        {/* Left - Settings */}
-        <div className="bg-white border border-[#E5E7EB] rounded-lg overflow-hidden">
-          <div className="flex border-b border-[#E5E7EB]">
+        {/* ── Left: settings panel ── */}
+        <Card flush>
+          {/* Tabs */}
+          <div className="flex border-b border-border/15">
             {tabs.map((t) => (
               <button
                 key={t.id}
+                type="button"
                 onClick={() => setActiveTab(t.id)}
-                className={`px-6 py-3 font-medium text-[14px] transition-colors border-b-2 -mb-px ${
+                className={[
+                  'px-6 py-4 font-medium text-ds-sm transition-all duration-normal border-b-2 -mb-px',
                   activeTab === t.id
-                    ? 'text-[#1A1A1A] border-[#1A1A1A]'
-                    : 'text-[#6B7280] border-transparent hover:text-[#1A1A1A]'
-                }`}
+                    ? 'text-cream border-teal'
+                    : 'text-steel-blue border-transparent hover:text-slate-text',
+                ].join(' ')}
               >
                 {t.label}
               </button>
             ))}
           </div>
 
-          <div className="p-8">
+          <div className="p-6">
+            {/* ── Details tab ── */}
             {activeTab === 'details' && (
-              <form onSubmit={handleSaveDetails} className="space-y-5">
-                <div>
-                  <label className="block font-medium text-[13px] text-[#1A1A1A] mb-1.5">Character name</label>
-                  <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] focus:border-[#1A1A1A] focus:outline-none"
-                    placeholder="Name"
-                  />
-                </div>
-                <div>
-                  <label className="block font-medium text-[13px] text-[#1A1A1A] mb-1.5">Signature Phrase</label>
-                  <input
-                    value={catchphrase}
-                    onChange={(e) => setCatchphrase(e.target.value)}
-                    className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] focus:border-[#1A1A1A] focus:outline-none"
-                    placeholder="One thing only this character would say..."
-                  />
-                </div>
-                <div>
-                  <label className="block font-medium text-[13px] text-[#1A1A1A] mb-1.5">Greeting</label>
+              <form onSubmit={handleSaveDetails} className="space-y-6">
+                <Input
+                  label="Character name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Name"
+                />
+                <Input
+                  label="Signature Phrase"
+                  value={catchphrase}
+                  onChange={(e) => setCatchphrase(e.target.value)}
+                  placeholder="One thing only this character would say…"
+                />
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-ds-sm font-medium text-cream">Greeting</label>
                   <textarea
                     rows={3}
                     value={greeting}
                     onChange={(e) => setGreeting(e.target.value)}
-                    className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] focus:border-[#1A1A1A] focus:outline-none"
                     placeholder="How does your character greet visitors?"
+                    className="w-full bg-bg-overlay border border-border/25 rounded-md py-3 px-4 text-ds-base text-cream placeholder:text-steel-blue focus:outline-none focus:border-teal/60 focus:ring-2 focus:ring-teal/15 transition-all duration-normal resize-none"
                   />
                 </div>
+
                 <div>
-                  <label className="block font-semibold text-[13px] text-[#1A1A1A] mb-3">Personality Dials</label>
-                  <div className="space-y-4">
-                    {[
-                      { l: 'Serious', r: 'Playful', v: seriousness, set: setSeriousness },
-                      { l: 'Formal', r: 'Casual', v: formality, set: setFormality },
-                      { l: 'Reserved', r: 'Enthusiastic', v: reservedness, set: setReservedness },
-                    ].map(({ l, r, v, set }) => (
-                      <div key={l} className="flex items-center gap-4">
-                        <span className="w-20 text-[13px] text-[#6B7280]">{l}</span>
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={v}
-                          onChange={(e) => set(Number(e.target.value))}
-                          className="flex-1 h-2 bg-[#E5E7EB] rounded-lg appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1A1A1A]"
-                        />
-                        <span className="w-24 text-[13px] text-[#6B7280]">{r}</span>
-                      </div>
-                    ))}
+                  <p className="text-ds-sm font-semibold text-cream mb-4">Personality Dials</p>
+                  <div className="space-y-5">
+                    <PersonalitySlider leftLabel="Serious"   rightLabel="Playful"      value={seriousness}  onChange={setSeriousness} />
+                    <PersonalitySlider leftLabel="Formal"    rightLabel="Casual"        value={formality}    onChange={setFormality} />
+                    <PersonalitySlider leftLabel="Reserved"  rightLabel="Enthusiastic"  value={reservedness} onChange={setReservedness} />
                   </div>
                 </div>
-                <button
-                  type="submit"
-                  disabled={detailsSaving}
-                  className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-5 py-2.5 rounded-lg hover:opacity-90 disabled:opacity-60"
-                >
-                  {detailsSaving ? 'Saving...' : detailsSaved ? 'Saved' : 'Save Details'}
-                </button>
+
+                <Button type="submit" disabled={detailsSaving} size="md">
+                  {detailsSaving ? 'Saving…' : detailsSaved ? 'Saved ✓' : 'Save Details'}
+                </Button>
               </form>
             )}
 
+            {/* ── Knowledge tab ── */}
             {activeTab === 'knowledge' && (
               <div className="space-y-4">
-                <input
-                  type="text"
+                <Input
+                  placeholder="Search Q&A pairs…"
                   value={qaSearch}
                   onChange={(e) => setQaSearch(e.target.value)}
-                  placeholder="Search Q&A pairs..."
-                  className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-2.5 text-[14px] focus:border-[#1A1A1A] focus:outline-none"
                 />
+
                 <div className="space-y-2">
                   {filteredKnowledge.map((k) => (
-                    <div
-                      key={k.id}
-                      className="flex items-start gap-2 p-3 border border-[#E5E7EB] rounded-lg group"
-                    >
+                    <div key={k.id} className="flex items-start gap-3 p-4 bg-bg-overlay rounded-md border border-border/15">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-[13px] text-[#1A1A1A]">{k.question}</p>
-                        <p className="mt-0.5 text-[12px] text-[#6B7280]">{k.answer}</p>
+                        <p className="font-medium text-ds-sm text-cream">{k.question}</p>
+                        <p className="mt-1 text-ds-sm text-slate-text">{k.answer}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleDeleteQa(k.id)}
-                        className="text-[#EF4444] hover:bg-[#FEF2F2] p-1.5 rounded shrink-0"
+                        className="text-coral hover:text-coral/70 p-1.5 rounded transition-colors shrink-0"
                         aria-label="Delete"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
                     </div>
                   ))}
                 </div>
-                <div className="border-t border-[#E5E7EB] pt-4 space-y-2">
-                  <p className="font-medium text-[13px] text-[#1A1A1A]">Add new Q&A pair</p>
-                  <input
-                    type="text"
+
+                <div className="border-t border-border/15 pt-6 space-y-3">
+                  <p className="font-medium text-ds-sm text-cream">Add new Q&amp;A pair</p>
+                  <Input
+                    placeholder="Question"
                     value={newQuestion}
                     onChange={(e) => setNewQuestion(e.target.value)}
-                    placeholder="Question"
-                    className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-2 text-[14px] focus:border-[#1A1A1A] focus:outline-none"
                   />
-                  <input
-                    type="text"
+                  <Input
+                    placeholder="Answer"
                     value={newAnswer}
                     onChange={(e) => setNewAnswer(e.target.value)}
-                    placeholder="Answer"
-                    className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-2 text-[14px] focus:border-[#1A1A1A] focus:outline-none"
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={handleAddQa}
                     disabled={!newQuestion.trim() || !newAnswer.trim()}
-                    className="flex items-center gap-1.5 text-[#22C55E] font-medium text-[13px] hover:underline disabled:opacity-50"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Add pair
-                  </button>
+                    + Add pair
+                  </Button>
                 </div>
               </div>
             )}
 
+            {/* ── Widget tab ── */}
             {activeTab === 'widget' && (
               <div className="space-y-6">
                 <div>
-                  <label className="block font-semibold text-[14px] text-[#1A1A1A] mb-2">Widget layout</label>
+                  <p className="font-semibold text-ds-sm text-cream mb-3">Layout</p>
                   <div className="flex flex-wrap gap-2">
                     {LAYOUTS.map((l) => (
                       <button
                         key={l}
-                        onClick={() => setWidgetLayout(l)}
                         type="button"
-                        className={`px-3.5 py-2 rounded-full font-medium text-[13px] transition-all ${
-                          widgetLayout === l ? 'bg-[#1A1A1A] text-white' : 'bg-[#F5F5F5] text-[#6B7280] hover:bg-[#E5E7EB]'
-                        }`}
+                        onClick={() => setWidgetLayout(l)}
+                        className={[
+                          'px-4 py-2 rounded-full font-medium text-ds-sm transition-all duration-normal border',
+                          widgetLayout === l
+                            ? 'bg-teal/15 text-teal border-teal/25'
+                            : 'bg-bg-overlay text-slate-text border-border/15 hover:text-cream',
+                        ].join(' ')}
                       >
                         {l}
                       </button>
                     ))}
                   </div>
                 </div>
+
                 <div>
-                  <label className="block font-semibold text-[14px] text-[#1A1A1A] mb-2">Position</label>
+                  <p className="font-semibold text-ds-sm text-cream mb-3">Position</p>
                   <div className="flex flex-wrap gap-2">
                     {POSITIONS.map((p) => (
                       <button
                         key={p}
-                        onClick={() => setWidgetPosition(p)}
                         type="button"
-                        className={`px-3.5 py-2 rounded-full font-medium text-[13px] transition-all ${
-                          widgetPosition === p ? 'bg-[#1A1A1A] text-white' : 'bg-[#F5F5F5] text-[#6B7280] hover:bg-[#E5E7EB]'
-                        }`}
+                        onClick={() => setWidgetPosition(p)}
+                        className={[
+                          'px-4 py-2 rounded-full font-medium text-ds-sm transition-all duration-normal border',
+                          widgetPosition === p
+                            ? 'bg-teal/15 text-teal border-teal/25'
+                            : 'bg-bg-overlay text-slate-text border-border/15 hover:text-cream',
+                        ].join(' ')}
                       >
                         {p}
                       </button>
                     ))}
                   </div>
                 </div>
+
                 <div>
-                  <label className="block font-semibold text-[14px] text-[#1A1A1A] mb-2">Trigger</label>
-                  <div className="space-y-2">
+                  <p className="font-semibold text-ds-sm text-cream mb-3">Trigger</p>
+                  <div className="space-y-3">
                     {TRIGGERS.map((t) => (
-                      <label key={t.id} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="trigger"
-                          checked={widgetTrigger === t.id}
-                          onChange={() => setWidgetTrigger(t.id)}
-                          className="w-4 h-4 text-[#1A1A1A]"
-                        />
-                        <span className="text-[14px] text-[#1A1A1A]">{t.label}</span>
-                      </label>
+                      <Toggle
+                        key={t.id}
+                        checked={widgetTrigger === t.id}
+                        onChange={() => setWidgetTrigger(t.id)}
+                        label={t.label}
+                      />
                     ))}
                   </div>
                 </div>
+
                 <div>
-                  <label className="block font-semibold text-[14px] text-[#1A1A1A] mb-2">Embed code</label>
-                  <pre className="p-4 bg-[#1A1A1A] rounded-lg text-[#22C55E] text-[12px] font-mono overflow-x-auto">
+                  <p className="font-semibold text-ds-sm text-cream mb-3">Embed code</p>
+                  <pre className="p-4 bg-bg-overlay rounded-md text-teal text-ds-sm font-mono overflow-x-auto border border-border/15 whitespace-pre-wrap break-all">
                     {embedCode}
                   </pre>
                   <button
                     type="button"
                     onClick={handleCopy}
-                    className="mt-2 border border-[#E5E7EB] bg-white text-[#1A1A1A] font-semibold text-[13px] px-4 py-2 rounded-lg hover:bg-[#F5F5F5]"
+                    className="mt-3 flex items-center gap-2 text-ds-sm text-steel-blue font-medium hover:text-cream transition-colors duration-normal"
                   >
-                    {copied ? 'Copied' : 'Copy'}
+                    {copied
+                      ? <><Check className="w-4 h-4 text-teal" strokeWidth={1.5} /> Copied</>
+                      : <><Copy className="w-4 h-4" strokeWidth={1.5} /> Copy code</>
+                    }
                   </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleSaveWidget}
-                  disabled={widgetSaving}
-                  className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-5 py-2.5 rounded-lg hover:opacity-90 disabled:opacity-60"
-                >
-                  {widgetSaving ? 'Saving...' : 'Save Widget Settings'}
-                </button>
+
+                <Button type="button" onClick={handleSaveWidget} disabled={widgetSaving}>
+                  {widgetSaving ? 'Saving…' : 'Save Widget Settings'}
+                </Button>
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
-        {/* Right - Preview */}
+        {/* ── Right: character preview ── */}
         <div className="lg:order-2">
-          <div className="bg-[#1A1A1A] rounded-lg p-6 min-h-[400px] flex flex-col">
-            {persona.imageUrl ? (
-              <img
-                src={persona.imageUrl}
-                alt=""
-                className="w-full max-h-[240px] object-contain rounded-md"
-              />
-            ) : (
-              <div className="w-full h-48 bg-[#2A2A2A] rounded-lg flex items-center justify-center text-[#6B7280] text-[13px]">
+          <Card className="min-h-[400px] flex flex-col">
+            <Avatar
+              src={persona.imageUrl}
+              initials={(persona.name ?? 'C').slice(0, 2)}
+              size="xl"
+              ring
+              className="mx-auto"
+            />
+            {!persona.imageUrl && (
+              <div className="w-full h-48 bg-bg-overlay rounded-md flex items-center justify-center text-steel-blue text-ds-sm mt-4">
                 [ Character image ]
               </div>
             )}
-            <h3 className="mt-4 font-bold text-[18px] text-white">{persona.name ?? 'Character'}</h3>
-            <p className="text-[13px] text-[#6B7280]">{persona.characterType ?? persona.productName ?? '—'}</p>
-            <div className="mt-4 p-3 bg-[#2A2A2A] rounded-lg">
-              <p className="text-[12px] text-[#6B7280] mb-1">Greeting</p>
-              <p className="text-[14px] text-white">
+            {persona.imageUrl && (
+              <img
+                src={persona.imageUrl}
+                alt=""
+                className="mt-4 w-full max-h-[240px] object-contain rounded-md"
+              />
+            )}
+
+            <h3 className="mt-4 font-bold text-ds-md text-cream">{persona.name ?? 'Character'}</h3>
+            <p className="text-ds-sm text-steel-blue">{persona.characterType ?? persona.productName ?? '—'}</p>
+
+            {/* Greeting preview */}
+            <div className="mt-4 p-4 bg-bg-overlay rounded-md">
+              <p className="text-ds-xs text-steel-blue mb-1 uppercase tracking-wider">Greeting</p>
+              <p className="text-ds-sm text-cream">
                 {greeting || persona.greeting || 'Hi there! Ask me anything about this product.'}
               </p>
             </div>
-            <div className="mt-4 p-3 bg-[#2A2A2A] rounded-lg">
-              <p className="text-[12px] text-[#6B7280] mb-1">Sample exchange</p>
-              <p className="text-[13px] text-white">Visitor: Is this waterproof?</p>
-              <p className="text-[13px] text-[#22C55E] mt-1">Character: Absolutely. Rated IPX7...</p>
+
+            {/* Sample exchange */}
+            <div className="mt-4 p-4 bg-bg-overlay rounded-md">
+              <p className="text-ds-xs text-steel-blue mb-2 uppercase tracking-wider">Sample exchange</p>
+              <p className="text-ds-sm text-slate-text">Visitor: Is this waterproof?</p>
+              <p className="text-ds-sm text-teal mt-1">Character: Absolutely. Rated IPX7…</p>
             </div>
-            <button
+
+            <Button
               type="button"
-              className="mt-6 border border-white/30 text-white font-medium text-[13px] px-4 py-2 rounded-lg hover:bg-white/10"
+              variant="secondary"
+              size="sm"
+              className="mt-6 self-start"
             >
               Regenerate Image
-            </button>
-            <p className="mt-1.5 text-[12px] text-[#6B7280]">Image regeneration uses 1 credit.</p>
-          </div>
+            </Button>
+            <p className="mt-2 text-ds-xs text-steel-blue">Image regeneration uses 1 credit.</p>
+          </Card>
         </div>
       </div>
     </div>
