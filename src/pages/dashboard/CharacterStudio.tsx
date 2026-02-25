@@ -43,6 +43,14 @@ interface ApiError {
   retryAfter?: number
 }
 
+function BackIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 512 512" fill="currentColor" aria-hidden>
+      <path d="M256,0C114.837,0,0,114.837,0,256s114.837,256,256,256s256-114.837,256-256S397.163,0,256,0z M384,277.333H179.499l48.917,48.917c8.341,8.341,8.341,21.824,0,30.165c-4.16,4.16-9.621,6.251-15.083,6.251c-5.461,0-10.923-2.091-15.083-6.251l-85.333-85.333c-1.963-1.963-3.52-4.309-4.608-6.933c-2.155-5.205-2.155-11.093,0-16.299c1.088-2.624,2.645-4.971,4.608-6.933l85.333-85.333c8.341-8.341,21.824-8.341,30.165,0s8.341,21.824,0,30.165l-48.917,48.917H384c11.776,0,21.333,9.557,21.333,21.333S395.776,277.333,384,277.333z" />
+    </svg>
+  )
+}
+
 function ExpertIcon() {
   return (
     <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -86,10 +94,10 @@ const STEPS = [
   { num: 5, label: 'Launch' },
 ]
 
-const CATEGORY_OPTIONS: { id: CharacterStyleType; title: string; shortDesc: string }[] = [
-  { id: 'product-morphing', title: 'Living Product', shortDesc: 'Transform your product or tool into an animated character' },
-  { id: 'head-only', title: 'Head Only', shortDesc: 'Floating head character for chat widgets' },
-  { id: 'avatar', title: 'Custom Avatar', shortDesc: 'Professional illustrated avatar for your brand' },
+const CATEGORY_OPTIONS: { id: CharacterStyleType; title: string; shortDesc: string; videoSrc: string }[] = [
+  { id: 'product-morphing', title: 'Living Product', shortDesc: 'Transform your product or tool into an animated character', videoSrc: '/videos/living-product.webm' },
+  { id: 'head-only', title: 'Head Only', shortDesc: 'Floating head character for chat widgets', videoSrc: '/videos/head-only.webm' },
+  { id: 'avatar', title: 'Custom Avatar', shortDesc: 'Professional illustrated avatar for your brand', videoSrc: '/videos/custom-avatar.webm' },
 ]
 
 const CHARACTER_TYPES = [
@@ -166,15 +174,15 @@ export function CharacterStudio() {
     })
   }
 
-  // Handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle image upload. Living Product: anatomy is analyzed server-side from the image.
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      setProductImage(file)
-      const reader = new FileReader()
-      reader.onloadend = () => setProductImagePreview(reader.result as string)
-      reader.readAsDataURL(file)
-    }
+    if (!file) return
+    setProductImage(file)
+    const reader = new FileReader()
+    reader.onloadend = () => setProductImagePreview(reader.result as string)
+    reader.readAsDataURL(file)
+    // Living Product: anatomy analyzed server-side; object type not needed
   }
 
   // API call helper
@@ -228,14 +236,15 @@ export function CharacterStudio() {
   // Handle character generation
   const handleGenerate = async () => {
     const needsProduct = characterStyleType === 'product-morphing'
-    if (needsProduct && (!productImage || !objectType.trim())) {
+    const needsProductImage = needsProduct || characterStyleType === 'head-only'
+    if (needsProduct && !productImage) {
       setError({
         error: 'VALIDATION_ERROR',
-        message: 'Please upload a product image and enter the object type (e.g. blender, chair, door)',
+        message: 'Please upload a product image. AI will analyze it to create your Living Product character.',
       })
       return
     }
-    if ((needsProduct || characterStyleType === 'head-only') && !productImage) {
+    if (needsProductImage && !productImage) {
       setError({
         error: 'VALIDATION_ERROR',
         message: 'Please upload an image',
@@ -268,8 +277,8 @@ export function CharacterStudio() {
         method: 'POST',
         body: JSON.stringify({
           productImage: imageBase64,
-          productName: objectType.trim() || 'product',
-          objectType: objectType.trim(),
+          productName: characterStyleType === 'product-morphing' ? 'product' : (objectType.trim() || 'product'),
+          objectType: characterStyleType === 'product-morphing' ? undefined : objectType.trim(),
           generationType,
           characterStyleType,
           characterType: characterStyleType === 'avatar' ? 'avatar' : characterTypeMap[characterType || 'The Expert'],
@@ -317,7 +326,7 @@ export function CharacterStudio() {
       <div className="bg-[#F5F5F5] min-h-full">
         {/* Step indicator */}
         <div className="bg-white border-b border-[#E5E7EB] px-4 md:px-8 py-5">
-          <div className="flex items-center justify-between max-w-3xl mx-auto">
+          <div className="flex items-center max-w-3xl mx-auto">
           {STEPS.filter((s) => s.num > 0).map((s, i) => (
             <div key={s.num} className="flex items-center flex-1">
               <div className="flex flex-col items-center">
@@ -365,7 +374,7 @@ export function CharacterStudio() {
                 Choose one — this determines how we generate your character.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex flex-row flex-wrap justify-center gap-6">
               {CATEGORY_OPTIONS.map((opt) => (
                 <button
                   key={opt.id}
@@ -373,19 +382,35 @@ export function CharacterStudio() {
                     setCharacterStyleType(opt.id)
                     setStep(1)
                   }}
-                  className={`p-8 md:p-10 rounded-2xl border-2 transition-all text-left ${
+                  className={`flex-1 min-w-[220px] max-w-[320px] p-6 md:p-8 rounded-2xl border-2 transition-all flex flex-col items-center ${
                     characterStyleType === opt.id
                       ? 'border-[#1A1A1A] bg-[#FAFAFA] shadow-lg'
                       : 'border-[#E5E7EB] bg-white hover:border-[#6B7280] hover:shadow-md'
                   }`}
                 >
-                  <div className="text-4xl mb-4">
-                    {opt.id === 'product-morphing' && '🛠️'}
-                    {opt.id === 'head-only' && '👤'}
-                    {opt.id === 'avatar' && '✨'}
+                  <div className="w-full aspect-video rounded-xl overflow-hidden mb-4 bg-[#F5F5F5] relative">
+                    <video
+                      src={opt.videoSrc}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLVideoElement).style.display = 'none'
+                        const parent = (e.target as HTMLVideoElement).parentElement
+                        const fallback = parent?.querySelector('[data-fallback]') as HTMLElement
+                        if (fallback) fallback.style.display = 'flex'
+                      }}
+                    />
+                    <div data-fallback className="absolute inset-0 hidden flex items-center justify-center text-5xl" style={{ display: 'none' }}>
+                      {opt.id === 'product-morphing' && '🛠️'}
+                      {opt.id === 'head-only' && '👤'}
+                      {opt.id === 'avatar' && '✨'}
+                    </div>
                   </div>
-                  <h3 className="font-bold text-xl text-[#1A1A1A]">{opt.title}</h3>
-                  <p className="mt-2 text-[15px] text-[#6B7280]">{opt.shortDesc}</p>
+                  <h3 className="font-bold text-xl text-[#1A1A1A] text-center">{opt.title}</h3>
+                  <p className="mt-2 text-[15px] text-[#6B7280] text-center">{opt.shortDesc}</p>
                 </button>
               ))}
             </div>
@@ -396,6 +421,14 @@ export function CharacterStudio() {
         {step === 1 && characterStyleType === 'product-morphing' && (
           <div className="max-w-[640px] mx-auto">
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 md:p-10">
+              <button
+                onClick={() => setStep(0)}
+                className="flex items-center gap-2 text-[#1A1A1A] hover:text-[#6B7280] transition-colors font-medium text-[14px] mb-6"
+                aria-label="Back to previous step"
+              >
+                <BackIcon className="w-6 h-6" />
+                <span>Back</span>
+              </button>
               <h2 className="font-bold text-2xl text-[#1A1A1A] leading-tight">
                 Your product or tool
               </h2>
@@ -432,6 +465,7 @@ export function CharacterStudio() {
                       onClick={() => {
                         setProductImage(null)
                         setProductImagePreview(null)
+                        setObjectType('')
                       }}
                       className="absolute top-6 right-6 bg-white border border-[#E5E7EB] rounded-full p-2 hover:bg-[#F5F5F5] transition-all"
                     >
@@ -443,23 +477,14 @@ export function CharacterStudio() {
                 )}
               </div>
 
-              <div className="mt-6">
-                <label className="block font-medium text-[13px] text-[#1A1A1A] mb-1.5">Object Type *</label>
-                <input
-                  type="text"
-                  value={objectType}
-                  onChange={(e) => setObjectType(e.target.value)}
-                  placeholder="e.g. blender, chair, door, pillar, vacuum cleaner"
-                  className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-3 text-[14px] font-normal focus:border-[#5B7C99] focus:outline-none"
-                />
-                <p className="mt-1 text-[12px] text-[#6B7280]">What is this object? The AI uses this to generate an animated version of your product.</p>
-              </div>
+              <p className="mt-4 text-[13px] text-[#6B7280]">
+                AI will analyze your product image to create a Living Product character — no object type needed.
+              </p>
 
-              <div className="mt-8 flex justify-between">
-                <button onClick={() => setStep(0)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">Back</button>
+              <div className="mt-8 flex justify-end">
                 <button
                   onClick={() => setStep(2)}
-                  disabled={!productImage || !objectType.trim()}
+                  disabled={!productImage}
                   className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next: Personality
@@ -472,6 +497,14 @@ export function CharacterStudio() {
         {step === 1 && (characterStyleType === 'head-only' || characterStyleType === 'avatar') && (
           <div className="max-w-[640px] mx-auto">
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 md:p-10">
+              <button
+                onClick={() => setStep(0)}
+                className="flex items-center gap-2 text-[#1A1A1A] hover:text-[#6B7280] transition-colors font-medium text-[14px] mb-6"
+                aria-label="Back to previous step"
+              >
+                <BackIcon className="w-6 h-6" />
+                <span>Back</span>
+              </button>
               <h2 className="font-bold text-2xl text-[#1A1A1A]">
                 {characterStyleType === 'avatar' ? 'Design your avatar' : 'Head-only character'}
               </h2>
@@ -510,8 +543,7 @@ export function CharacterStudio() {
                   )}
                 </div>
               )}
-              <div className="mt-8 flex justify-between">
-                <button onClick={() => setStep(0)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">Back</button>
+              <div className="mt-8 flex justify-end">
                 <button
                   onClick={() => setStep(2)}
                   disabled={characterStyleType === 'head-only' && !productImage}
@@ -528,6 +560,14 @@ export function CharacterStudio() {
         {step === 2 && (
           <div className="max-w-[800px] mx-auto">
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 md:p-10">
+              <button
+                onClick={() => setStep(1)}
+                className="flex items-center gap-2 text-[#1A1A1A] hover:text-[#6B7280] transition-colors font-medium text-[14px] mb-6"
+                aria-label="Back to previous step"
+              >
+                <BackIcon className="w-6 h-6" />
+                <span>Back</span>
+              </button>
               <h2 className="font-bold text-2xl text-[#1A1A1A]">Character Personality</h2>
               <p className="mt-2 text-[15px] text-[#6B7280]">
                 Select how your character should sound and behave.
@@ -580,8 +620,7 @@ export function CharacterStudio() {
                 </div>
               )}
 
-              <div className="mt-8 flex justify-between">
-                <button onClick={() => setStep(1)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">Back</button>
+              <div className="mt-8 flex justify-end">
                 <button onClick={() => setStep(3)} className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg">
                   Next: Voice
                 </button>
@@ -594,6 +633,14 @@ export function CharacterStudio() {
         {step === 3 && (
           <div className="max-w-[640px] mx-auto">
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 md:p-10">
+              <button
+                onClick={() => setStep(2)}
+                className="flex items-center gap-2 text-[#1A1A1A] hover:text-[#6B7280] transition-colors font-medium text-[14px] mb-6"
+                aria-label="Back to previous step"
+              >
+                <BackIcon className="w-6 h-6" />
+                <span>Back</span>
+              </button>
               <h2 className="font-bold text-2xl text-[#1A1A1A]">Name and voice your character.</h2>
               <p className="mt-2 text-[15px] text-[#6B7280]">
                 Soul Engine handles the deep personality. You give them a name and a first impression.
@@ -655,8 +702,7 @@ export function CharacterStudio() {
                 </div>
               </div>
 
-              <div className="mt-8 flex justify-between">
-                <button onClick={() => setStep(2)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">Back</button>
+              <div className="mt-8 flex justify-end">
                 <button onClick={() => setStep(4)} className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg">
                   Next: Knowledge Base
                 </button>
@@ -669,6 +715,14 @@ export function CharacterStudio() {
         {step === 4 && (
           <div className="max-w-[640px] mx-auto">
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 md:p-10">
+              <button
+                onClick={() => setStep(3)}
+                className="flex items-center gap-2 text-[#1A1A1A] hover:text-[#6B7280] transition-colors font-medium text-[14px] mb-6"
+                aria-label="Back to previous step"
+              >
+                <BackIcon className="w-6 h-6" />
+                <span>Back</span>
+              </button>
               <h2 className="font-bold text-2xl text-[#1A1A1A]">Build your character&apos;s knowledge base.</h2>
               <p className="mt-2 text-[15px] text-[#6B7280]">
                 AI generates 30 Q&A pairs from your URL. You review and approve. Zero manual typing.
@@ -723,8 +777,7 @@ export function CharacterStudio() {
                 </div>
               </div>
 
-              <div className="mt-8 flex justify-between">
-                <button onClick={() => setStep(3)} className="text-[14px] text-[#6B7280] hover:text-[#1A1A1A]">Back</button>
+              <div className="mt-8 flex justify-end">
                 <button onClick={() => setStep(5)} className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg">
                   Next: Launch
                 </button>
@@ -737,6 +790,14 @@ export function CharacterStudio() {
         {step === 5 && (
           <div className="max-w-[560px] mx-auto">
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-8">
+              <button
+                onClick={() => setStep(4)}
+                className="flex items-center gap-2 text-[#1A1A1A] hover:text-[#6B7280] transition-colors font-medium text-[14px] mb-6"
+                aria-label="Back to previous step"
+              >
+                <BackIcon className="w-6 h-6" />
+                <span>Back</span>
+              </button>
               {/* Error Display */}
               {error && (
                 <div className="mb-6 bg-[#F5F1ED] border border-[#8B7355] rounded-lg p-4">
@@ -774,7 +835,7 @@ export function CharacterStudio() {
 
                   <div className="mt-8 space-y-0">
                     {[
-                      ['Object Type', objectType || '—'],
+                      ['Object Type', characterStyleType === 'product-morphing' ? 'Detected from image' : (objectType || '—')],
                       ['Category', characterStyleType === 'avatar' ? 'Custom Avatar' : characterStyleType === 'head-only' ? 'Head Only' : 'Living Product'],
                       ['Character Type', characterStyleType === 'avatar' ? 'Avatar' : characterType || 'The Expert'],
                       ['Character Name', charName],

@@ -1,5 +1,6 @@
 import type { APIGatewayProxyHandlerV2 } from 'aws-lambda'
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda'
+import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime'
 import { query, queryOne, queryMany } from '../soul-engine/database'
 import {
   extractVariablePlaceholders,
@@ -113,9 +114,12 @@ function validateGenerateCharacterRequest(body: Record<string, unknown>): string
   if (!body.productImage || typeof body.productImage !== 'string') {
     return 'productImage is required and must be a string'
   }
-  const nameOrType = body.productName ?? body.objectType
-  if (!nameOrType || typeof nameOrType !== 'string') {
-    return 'productName or objectType is required and must be a string'
+  const isLivingProduct = body.characterStyleType === 'product-morphing'
+  if (!isLivingProduct) {
+    const nameOrType = body.productName ?? body.objectType
+    if (!nameOrType || typeof nameOrType !== 'string') {
+      return 'productName or objectType is required and must be a string'
+    }
   }
   if (!body.characterType || typeof body.characterType !== 'string') {
     return 'characterType is required and must be a string'
@@ -198,6 +202,52 @@ async function invokeSoulEngine(action: string, payload: unknown): Promise<unkno
   return JSON.parse(payloadStr)
 }
 
+const bedrockRuntime = new BedrockRuntimeClient({})
+
+const CLAUDE_VISION_MODEL = 'anthropic.claude-3-haiku-20240307-v1:0'
+
+/** Parse base64 image from data URL (data:image/jpeg;base64,...) or raw base64 */
+function parseImageData(imageData: string): { base64: string; mediaType: string } {
+  if (imageData.startsWith('data:')) {
+    const match = imageData.match(/^data:(image\/[a-z]+);base64,(.+)$/i)
+    if (match) return { base64: match[2], mediaType: match[1] }
+  }
+  return { base64: imageData, mediaType: 'image/jpeg' }
+}
+
+async function detectObjectTypeFromImage(imageData: string): Promise<string> {
+  const { base64, mediaType } = parseImageData(imageData)
+  const body = JSON.stringify({
+    anthropic_version: 'bedrock-2023-05-31',
+    max_tokens: 100,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: mediaType, data: base64 },
+          },
+          {
+            type: 'text',
+            text: 'What is this product or object? Reply with ONLY a single short noun or noun phrase (e.g. "blender", "office chair", "vacuum cleaner", "water bottle"). No punctuation, no explanation.',
+          },
+        ],
+      },
+    ],
+  })
+  const command = new InvokeModelCommand({
+    modelId: CLAUDE_VISION_MODEL,
+    contentType: 'application/json',
+    accept: 'application/json',
+    body,
+  })
+  const response = await bedrockRuntime.send(command)
+  const result = JSON.parse(Buffer.from(response.body).toString('utf8'))
+  const text = result.content?.[0]?.text?.trim() ?? ''
+  return text || 'product'
+}
+
 // ============================================================================
 // Prompt Template Validation
 // ============================================================================
@@ -269,6 +319,39 @@ const handler: APIGatewayProxyHandlerV2 = async (event) => {
   }
 
   try {
+    // ========================================================================
+    // POST /api/bedrock/detect-object-type — AI object type from product image
+    // ========================================================================
+    if (httpMethod === 'POST' && parts[0] === 'detect-object-type') {
+      const body = parseBody(event as { body?: string })
+      const productImage = body.productImage as string
+      if (!productImage || typeof productImage !== 'string') {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ error: 'productImage is required (base64 or data URL)' }),
+          headers: corsHeaders(),
+        }
+      }
+      try {
+        const objectType = await detectObjectTypeFromImage(productImage)
+        return {
+          statusCode: 200,
+          body: JSON.stringify({ objectType }),
+          headers: corsHeaders(),
+        }
+      } catch (err) {
+        console.error('detect-object-type error:', err)
+        return {
+          statusCode: 500,
+          body: JSON.stringify({
+            error: 'OBJECT_DETECTION_FAILED',
+            message: err instanceof Error ? err.message : 'Failed to detect object type',
+          }),
+          headers: corsHeaders(),
+        }
+      }
+    }
+
     // ========================================================================
     // Task 4.1: POST /api/bedrock/generate-character
     // ========================================================================
@@ -612,7 +695,7 @@ const handler: APIGatewayProxyHandlerV2 = async (event) => {
             continue
           }
 
-          const variables = extractVariablePlaceholders(t.template)
+          const variables = extractVariablePlaceholders(t.template as string)
           const result = await queryOne<{ id: string }>(
             `INSERT INTO prompt_templates (name, template, description, is_active, variables, version, created_by)
              VALUES ($1, $2, $3, false, $4, 1, $5)

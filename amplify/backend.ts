@@ -31,6 +31,19 @@ const backend = defineBackend({
   soulEngine,
 })
 
+// Allow simple admin password (123456) for development
+const { cfnUserPool } = backend.auth.resources.cfnResources
+cfnUserPool.policies = {
+  passwordPolicy: {
+    minimumLength: 6,
+    requireLowercase: false,
+    requireNumbers: true,
+    requireSymbols: false,
+    requireUppercase: false,
+    temporaryPasswordValidityDays: 7,
+  },
+}
+
 const apiStack = backend.createStack('api-stack')
 
 const userPoolAuthorizer = new HttpUserPoolAuthorizer(
@@ -240,13 +253,22 @@ backend.apiBedrock.resources.lambda.addToRolePolicy(
   })
 )
 
-// Soul Engine Lambda: Bedrock and S3 permissions
+// API Bedrock: Claude vision for object type detection
+backend.apiBedrock.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    actions: ['bedrock:InvokeModel'],
+    resources: ['arn:aws:bedrock:*::foundation-model/anthropic.claude-3-haiku-20240307-v1:0'],
+  })
+)
+
+// Soul Engine Lambda: Bedrock and S3 permissions (Titan, Nova, Claude for anatomy)
 backend.soulEngine.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     actions: ['bedrock:InvokeModel'],
     resources: [
       'arn:aws:bedrock:*::foundation-model/amazon.titan-image-generator-v1',
-      'arn:aws:bedrock:*::foundation-model/amazon.nova-canvas-v1:0'
+      'arn:aws:bedrock:*::foundation-model/amazon.nova-canvas-v1:0',
+      'arn:aws:bedrock:*::foundation-model/anthropic.claude-3-haiku-20240307-v1:0'
     ]
   })
 )

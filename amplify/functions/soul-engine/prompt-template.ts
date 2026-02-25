@@ -29,6 +29,11 @@ export interface TemplateVariables {
   PRODUCT_COLORS?: string
   CHARACTER_TYPE?: string
   VIBE_TAGS?: string
+  /** Living Product: from anatomy analysis */
+  object_name?: string
+  shape_category?: string
+  face_placement?: string
+  arm_placement?: string
 }
 
 export interface ProcessedPrompt {
@@ -56,16 +61,20 @@ const SUPPORTED_VARIABLES = [
   'PRODUCT_COLORS',
   'CHARACTER_TYPE',
   'VIBE_TAGS',
+  'object_name',
+  'shape_category',
+  'face_placement',
+  'arm_placement',
 ] as const
 
 /**
  * Default prompt template used when no active template is found in database.
  */
-const DEFAULT_TEMPLATE = `Create a professional AI character that serves as a personal product expert and shopping guide for {PRODUCT_NAME}, a {PRODUCT_TYPE}. This character will interact with customers on e-commerce sites to answer questions and provide advice.
+const DEFAULT_TEMPLATE = `Create a professional AI character that serves as a personal product expert and shopping guide for {CHARACTER_TYPE}. This character will interact with customers on e-commerce sites to answer questions and provide advice.
 
 Character Archetype: {CHARACTER_TYPE}
 Personality Vibes: {VIBE_TAGS}
-Visual Style: Use colors inspired by the product ({PRODUCT_COLORS}), clean and professional design suitable for e-commerce widget embedding.
+Visual Style: Use colors inspired by the product {CHARACTER_TYPE} color, clean and professional design suitable for e-commerce widget embedding.
 
 The character should appear trustworthy, approachable, and knowledgeable - designed to assist customers in making informed purchase decisions. Style should be modern, clean, and optimized for web display at various sizes.`
 
@@ -188,11 +197,11 @@ export function replaceTemplateVariables(
 ): string {
   let result = template
   
-  // Replace each variable placeholder with its value
+  // Replace each variable placeholder with its value (use split/join to avoid regex escaping)
   for (const [key, value] of Object.entries(variables)) {
     if (value !== undefined && value !== null) {
       const placeholder = `{${key}}`
-      result = result.replace(new RegExp(placeholder, 'g'), value)
+      result = result.split(placeholder).join(String(value))
     }
   }
   
@@ -418,6 +427,32 @@ export function formatVibeTags(tags: string[]): string {
  */
 export function formatCharacterType(type: string): string {
   return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
+}
+
+// ============================================================================
+// Living Product Dynamic Prompt
+// ============================================================================
+
+/** Static negative prompt for Living Product (from report). */
+export const LIVING_PRODUCT_NEGATIVE_PROMPT =
+  'angry, mean, stern, aggressive, flat, 2D sticker, human skin, organic limbs, realistic human hands, thin lines, blurry, asymmetrical face'
+
+/** Living Product prompt template with anatomy placeholders. */
+const LIVING_PRODUCT_TEMPLATE = `Reference: Maintain the exact materials and industrial finish of the {object_name}. Render in centered, symmetrical front-view.
+The Face: Locate the {face_placement} of the {object_name}. Protrude facial features with high-relief 3D depth. Sculpt large eyes and an exaggeratedly happy smile.
+The Arms: Emerge two thick, expressive arms seamlessly from the {arm_placement}. Match surrounding materials, posed in a wide, joyful gesture.
+Personality: Radiant, incredibly happy, friendly. Technical: High-end PBR textures, strong studio lighting, transparent background, 8k resolution.`
+
+/**
+ * Builds the Living Product dynamic prompt from anatomy analysis.
+ */
+export function buildLivingProductPrompt(anatomy: {
+  object_name: string
+  shape_category: string
+  face_placement: string
+  arm_placement: string
+}): string {
+  return replaceTemplateVariables(LIVING_PRODUCT_TEMPLATE, anatomy)
 }
 
 /**
