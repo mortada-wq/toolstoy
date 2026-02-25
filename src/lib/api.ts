@@ -113,3 +113,11 @@ export async function getAdminOverview(): Promise<{
 }> {
   return apiGet('/api/admin/overview')
 }
+
+export async function createCheckoutSession(plan: 'pro' | 'studio'): Promise<{ url: string }> {
+  return apiPost<{ url: string }>('/api/billing/create-checkout-session', { plan })
+}
+
+export async function createPortalSession(): Promise<{ url: string }> {
+  return apiPost<{ url: string }>('/api/billing/create-portal-session')
+}

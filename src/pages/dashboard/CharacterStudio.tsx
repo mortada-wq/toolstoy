@@ -34,7 +34,7 @@ interface AvatarConfig {
   backgroundColor: string
 }
 
-type CharacterStyleType = 'product-morphing' | 'head-only' | 'avatar'
+type CharacterStyleType = 'product-morphing' | 'head-only' | 'avatar' | 'clothes-talking' | 'shop-seller'
 
 interface ApiError {
   error: string
@@ -94,10 +94,60 @@ const STEPS = [
   { num: 5, label: 'Launch' },
 ]
 
-const CATEGORY_OPTIONS: { id: CharacterStyleType; title: string; shortDesc: string; videoSrc: string }[] = [
-  { id: 'product-morphing', title: 'Living Product', shortDesc: 'Transform your product or tool into an animated character', videoSrc: '/videos/living-product.webm' },
-  { id: 'head-only', title: 'Head Only', shortDesc: 'Floating head character for chat widgets', videoSrc: '/videos/head-only.webm' },
-  { id: 'avatar', title: 'Custom Avatar', shortDesc: 'Professional illustrated avatar for your brand', videoSrc: '/videos/custom-avatar.webm' },
+const CATEGORY_OPTIONS: {
+  id: CharacterStyleType
+  headline: string
+  subheadline: string
+  description: string
+  example: string
+  videoSrc: string
+  fallbackEmoji: string
+}[] = [
+  {
+    id: 'product-morphing',
+    headline: "It's Alive!",
+    subheadline: "Your product just grew arms, legs, and an attitude.",
+    description: "Forget boring descriptions. The thing you're selling is now the one doing the talking. Best for items that have \"big personality\" potential.",
+    example: "A blender that tells jokes while it blends.",
+    videoSrc: '/videos/living-product.webm',
+    fallbackEmoji: '🛠️',
+  },
+  {
+    id: 'head-only',
+    headline: 'The Talking Head',
+    subheadline: 'The ultimate floating sidekick. 100% personality, 0% body.',
+    description: 'A friendly face in a chat bubble. It stays visible as customers scroll, providing fast help without taking up the whole screen.',
+    example: 'A helpful robot head that guides users through checkout.',
+    videoSrc: '/videos/head-only.webm',
+    fallbackEmoji: '👤',
+  },
+  {
+    id: 'avatar',
+    headline: 'The Big Shot',
+    subheadline: "Your brand's full-body superstar.",
+    description: 'A full-body illustrated character built from scratch. From head to toe, this character owns the stage and guides your customers home.',
+    example: 'A stylish mascot that welcomes people to your homepage.',
+    videoSrc: '/videos/custom-avatar.webm',
+    fallbackEmoji: '✨',
+  },
+  {
+    id: 'clothes-talking',
+    headline: 'The Walking Wardrobe',
+    subheadline: 'Invisible models, visible style. The clothes do the selling.',
+    description: 'The jacket talks. The dress has opinions. Perfect for fashion brands where the outfit is the star of the show.',
+    example: 'A pair of denim overalls walking and dancing on their own.',
+    videoSrc: '/videos/walking-wardrobe.webm',
+    fallbackEmoji: '👕',
+  },
+  {
+    id: 'shop-seller',
+    headline: 'The Best Seller',
+    subheadline: 'The expert behind the counter who knows everything.',
+    description: "The human touch. Whether he's holding a measuring tape or a wrench, this expert knows your inventory better than anyone.",
+    example: "A hardware pro who knows exactly which screw you need.",
+    videoSrc: '/videos/best-seller.webm',
+    fallbackEmoji: '🏪',
+  },
 ]
 
 const CHARACTER_TYPES = [
@@ -159,6 +209,8 @@ export function CharacterStudio() {
   const [estimatedTime, setEstimatedTime] = useState<number>(0)
   const [generationComplete, setGenerationComplete] = useState(false)
   const [availableStates, setAvailableStates] = useState<string[]>([])
+  const [headOnlyStylePreset, setHeadOnlyStylePreset] = useState<'robot' | 'cartoon-3d' | 'mascot' | 'default'>('default')
+  const [avatarStylePreset, setAvatarStylePreset] = useState<'professional' | 'cartoon-3d' | 'mascot' | 'casual'>('professional')
 
   const toggleVibe = (v: string) => {
     setSelectedVibes((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]))
@@ -236,7 +288,7 @@ export function CharacterStudio() {
   // Handle character generation
   const handleGenerate = async () => {
     const needsProduct = characterStyleType === 'product-morphing'
-    const needsProductImage = needsProduct || characterStyleType === 'head-only'
+    const needsProductImage = needsProduct || characterStyleType === 'head-only' || characterStyleType === 'avatar'
     if (needsProduct && !productImage) {
       setError({
         error: 'VALIDATION_ERROR',
@@ -247,7 +299,11 @@ export function CharacterStudio() {
     if (needsProductImage && !productImage) {
       setError({
         error: 'VALIDATION_ERROR',
-        message: 'Please upload an image',
+        message: needsProduct
+          ? 'Please upload a product image. AI will analyze it to create your Living Product character.'
+          : characterStyleType === 'avatar'
+            ? 'Please upload a reference image for your full-body avatar.'
+            : 'Please upload a reference image for your head-only character.',
       })
       return
     }
@@ -284,6 +340,8 @@ export function CharacterStudio() {
           characterType: characterStyleType === 'avatar' ? 'avatar' : characterTypeMap[characterType || 'The Expert'],
           avatarConfig: avatarConfig,
           vibeTags: selectedVibes,
+          headOnlyStylePreset: characterStyleType === 'head-only' ? headOnlyStylePreset : undefined,
+          avatarStylePreset: characterStyleType === 'avatar' ? avatarStylePreset : undefined,
         }),
       })
 
@@ -363,9 +421,9 @@ export function CharacterStudio() {
 
         {/* Step content */}
         <div className="p-6 md:p-12">
-        {/* Step 0 — Super Question: Choose category first */}
+        {/* Step 0 — Character Type Selector: high-end card gallery */}
         {step === 0 && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="font-bold text-3xl md:text-4xl text-[#1A1A1A] leading-tight">
                 What kind of character do you want to create?
@@ -374,43 +432,70 @@ export function CharacterStudio() {
                 Choose one — this determines how we generate your character.
               </p>
             </div>
-            <div className="flex flex-row flex-wrap justify-center gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               {CATEGORY_OPTIONS.map((opt) => (
                 <button
                   key={opt.id}
+                  type="button"
                   onClick={() => {
                     setCharacterStyleType(opt.id)
                     setStep(1)
                   }}
-                  className={`flex-1 min-w-[220px] max-w-[320px] p-6 md:p-8 rounded-2xl border-2 transition-all flex flex-col items-center ${
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setCharacterStyleType(opt.id)
+                      setStep(1)
+                    }
+                  }}
+                  aria-label={`Select ${opt.headline}: ${opt.subheadline}`}
+                  aria-pressed={characterStyleType === opt.id}
+                  className={`group relative w-full rounded-2xl border-2 bg-white shadow-lg transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[#FF7A2F] focus:ring-offset-2 ${
                     characterStyleType === opt.id
-                      ? 'border-[#1A1A1A] bg-[#FAFAFA] shadow-lg'
-                      : 'border-[#E5E7EB] bg-white hover:border-[#6B7280] hover:shadow-md'
+                      ? 'border-[#FF7A2F] ring-2 ring-[#FF7A2F]/20'
+                      : 'border-transparent hover:border-[#FF7A2F]/60'
                   }`}
                 >
-                  <div className="w-full aspect-video rounded-xl overflow-hidden mb-4 bg-[#F5F5F5] relative">
-                    <video
-                      src={opt.videoSrc}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLVideoElement).style.display = 'none'
-                        const parent = (e.target as HTMLVideoElement).parentElement
-                        const fallback = parent?.querySelector('[data-fallback]') as HTMLElement
-                        if (fallback) fallback.style.display = 'flex'
-                      }}
-                    />
-                    <div data-fallback className="absolute inset-0 hidden flex items-center justify-center text-5xl" style={{ display: 'none' }}>
-                      {opt.id === 'product-morphing' && '🛠️'}
-                      {opt.id === 'head-only' && '👤'}
-                      {opt.id === 'avatar' && '✨'}
+                  <div className="flex flex-col h-full overflow-hidden rounded-2xl">
+                    {/* Top: video placeholder */}
+                    <div className="w-full aspect-video rounded-t-2xl overflow-hidden bg-[#F5F5F5] relative shrink-0">
+                      <video
+                        src={opt.videoSrc}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLVideoElement).style.display = 'none'
+                          const parent = (e.target as HTMLVideoElement).parentElement
+                          const fallback = parent?.querySelector('[data-fallback]') as HTMLElement
+                          if (fallback) fallback.style.display = 'flex'
+                        }}
+                      />
+                      <div data-fallback className="absolute inset-0 hidden flex items-center justify-center text-5xl bg-gradient-to-b from-[#FAFAFA] to-[#F0F0F0]" style={{ display: 'none' }}>
+                        {opt.fallbackEmoji}
+                      </div>
+                    </div>
+                    {/* Middle: headline + subheadline */}
+                    <div className="flex flex-col flex-1 p-5 text-left">
+                      <h3 className="font-bold text-lg text-[#1A1A1A] leading-tight">
+                        {opt.headline}
+                      </h3>
+                      <p className="mt-1.5 text-sm text-[#6B7280] italic leading-snug">
+                        {opt.subheadline}
+                      </p>
+                      <p className="mt-3 text-[13px] text-[#6B7280] leading-relaxed">
+                        {opt.description}
+                      </p>
+                    </div>
+                    {/* Bottom: example tag */}
+                    <div className="px-5 pb-5 pt-0">
+                      <span className="inline-block text-xs text-[#6B7280] bg-[#F5F5F5] px-3 py-1.5 rounded-lg border border-[#E5E7EB]">
+                        Example: {opt.example}
+                      </span>
                     </div>
                   </div>
-                  <h3 className="font-bold text-xl text-[#1A1A1A] text-center">{opt.title}</h3>
-                  <p className="mt-2 text-[15px] text-[#6B7280] text-center">{opt.shortDesc}</p>
                 </button>
               ))}
             </div>
@@ -494,6 +579,31 @@ export function CharacterStudio() {
           </div>
         )}
 
+        {step === 1 && (characterStyleType === 'clothes-talking' || characterStyleType === 'shop-seller') && (
+          <div className="max-w-[640px] mx-auto">
+            <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 md:p-10">
+              <button
+                onClick={() => setStep(0)}
+                className="flex items-center gap-2 text-[#1A1A1A] hover:text-[#6B7280] transition-colors font-medium text-[14px] mb-6"
+                aria-label="Back to previous step"
+              >
+                <BackIcon className="w-6 h-6" />
+                <span>Back</span>
+              </button>
+              <h2 className="font-bold text-2xl text-[#1A1A1A]">
+                {CATEGORY_OPTIONS.find((o) => o.id === characterStyleType)?.headline ?? characterStyleType}
+              </h2>
+              <p className="mt-2 text-[15px] text-[#6B7280]">
+                We&apos;re designing this experience. Check back soon.
+              </p>
+              <div className="mt-8 p-6 bg-[#FAFAFA] rounded-lg text-center">
+                <span className="text-4xl">{characterStyleType === 'clothes-talking' ? '👕' : '🏪'}</span>
+                <p className="mt-3 font-medium text-[#1A1A1A]">Coming soon</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {step === 1 && (characterStyleType === 'head-only' || characterStyleType === 'avatar') && (
           <div className="max-w-[640px] mx-auto">
             <div className="bg-white border border-[#E5E7EB] rounded-lg p-8 md:p-10">
@@ -510,43 +620,105 @@ export function CharacterStudio() {
               </h2>
               <p className="mt-2 text-[15px] text-[#6B7280]">
                 {characterStyleType === 'avatar'
-                  ? 'Customize your professional illustrated avatar.'
+                  ? 'Upload a reference image. AI creates a full-body avatar with no background.'
                   : 'Upload a reference image for your head-only character.'}
               </p>
               {characterStyleType === 'avatar' && (
-                <div className="mt-8">
-                  <AvatarCustomizer
-                    onAvatarChange={(config) => {
-                      setAvatarConfig(config)
-                    }}
-                  />
-                </div>
+                <>
+                  <div className="mt-8">
+                    <label className="block font-medium text-[13px] text-[#1A1A1A] mb-2">Reference Image</label>
+                    {!productImagePreview ? (
+                      <label htmlFor="avatar-image-upload" className="block cursor-pointer">
+                        <div className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-12 bg-[#FAFAFA] text-center hover:border-[#5B7C99] transition-all">
+                          <svg className="w-10 h-10 mx-auto text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                          <p className="mt-3 font-medium text-[16px] text-[#1A1A1A]">Drop image here</p>
+                          <input id="avatar-image-upload" type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                        </div>
+                      </label>
+                    ) : (
+                      <div className="relative border-2 border-[#5B7C99] rounded-lg p-4">
+                        <img src={productImagePreview} alt="Reference" className="w-full h-48 object-contain rounded-lg" />
+                        <button onClick={() => { setProductImage(null); setProductImagePreview(null) }} className="absolute top-4 right-4 bg-white border rounded-full p-2">✕</button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-6">
+                    <label className="block font-medium text-[13px] text-[#1A1A1A] mb-2">Style</label>
+                    <div className="flex flex-wrap gap-2">
+                      {(['professional', 'cartoon-3d', 'mascot', 'casual'] as const).map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setAvatarStylePreset(preset)}
+                          className={`px-4 py-2.5 rounded-lg font-medium text-[13px] transition-all ${
+                            avatarStylePreset === preset
+                              ? 'bg-[#1A1A1A] text-white border border-[#1A1A1A]'
+                              : 'bg-white border border-[#E5E7EB] text-[#6B7280] hover:border-[#5B7C99]'
+                          }`}
+                        >
+                          {preset === 'cartoon-3d' ? 'Cartoon 3D' : preset.charAt(0).toUpperCase() + preset.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <label className="block font-medium text-[13px] text-[#1A1A1A] mb-2">Optional: Appearance hints</label>
+                    <AvatarCustomizer
+                      onAvatarChange={(config) => {
+                        setAvatarConfig(config)
+                      }}
+                    />
+                  </div>
+                </>
               )}
               {characterStyleType === 'head-only' && (
-                <div className="mt-8">
-                  <label className="block font-medium text-[13px] text-[#1A1A1A] mb-2">Reference Image</label>
-                  {!productImagePreview ? (
-                    <label htmlFor="head-image-upload" className="block cursor-pointer">
-                      <div className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-12 bg-[#FAFAFA] text-center hover:border-[#5B7C99] transition-all">
-                        <svg className="w-10 h-10 mx-auto text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                        <p className="mt-3 font-medium text-[16px] text-[#1A1A1A]">Drop image here</p>
-                        <input id="head-image-upload" type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                <>
+                  <div className="mt-8">
+                    <label className="block font-medium text-[13px] text-[#1A1A1A] mb-2">Reference Image</label>
+                    {!productImagePreview ? (
+                      <label htmlFor="head-image-upload" className="block cursor-pointer">
+                        <div className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-12 bg-[#FAFAFA] text-center hover:border-[#5B7C99] transition-all">
+                          <svg className="w-10 h-10 mx-auto text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                          <p className="mt-3 font-medium text-[16px] text-[#1A1A1A]">Drop image here</p>
+                          <input id="head-image-upload" type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                        </div>
+                      </label>
+                    ) : (
+                      <div className="relative border-2 border-[#5B7C99] rounded-lg p-4">
+                        <img src={productImagePreview} alt="Reference" className="w-full h-48 object-contain rounded-lg" />
+                        <button onClick={() => { setProductImage(null); setProductImagePreview(null) }} className="absolute top-4 right-4 bg-white border rounded-full p-2">✕</button>
                       </div>
-                    </label>
-                  ) : (
-                    <div className="relative border-2 border-[#5B7C99] rounded-lg p-4">
-                      <img src={productImagePreview} alt="Reference" className="w-full h-48 object-contain rounded-lg" />
-                      <button onClick={() => { setProductImage(null); setProductImagePreview(null) }} className="absolute top-4 right-4 bg-white border rounded-full p-2">✕</button>
+                    )}
+                  </div>
+                  <div className="mt-6">
+                    <label className="block font-medium text-[13px] text-[#1A1A1A] mb-2">3D Style</label>
+                    <div className="flex flex-wrap gap-2">
+                      {(['default', 'robot', 'cartoon-3d', 'mascot'] as const).map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setHeadOnlyStylePreset(preset)}
+                          className={`px-4 py-2.5 rounded-lg font-medium text-[13px] transition-all ${
+                            headOnlyStylePreset === preset
+                              ? 'bg-[#1A1A1A] text-white border border-[#1A1A1A]'
+                              : 'bg-white border border-[#E5E7EB] text-[#6B7280] hover:border-[#5B7C99]'
+                          }`}
+                        >
+                          {preset === 'default' ? 'Default' : preset === 'cartoon-3d' ? 'Cartoon 3D' : preset.charAt(0).toUpperCase() + preset.slice(1)}
+                        </button>
+                      ))}
                     </div>
-                  )}
-                </div>
+                  </div>
+                </>
               )}
               <div className="mt-8 flex justify-end">
                 <button
                   onClick={() => setStep(2)}
-                  disabled={characterStyleType === 'head-only' && !productImage}
+                  disabled={(characterStyleType === 'head-only' || characterStyleType === 'avatar') && !productImage}
                   className="bg-[#1A1A1A] text-white font-semibold text-[14px] px-6 py-3.5 rounded-lg disabled:opacity-50"
                 >
                   Next: Personality
@@ -836,7 +1008,7 @@ export function CharacterStudio() {
                   <div className="mt-8 space-y-0">
                     {[
                       ['Object Type', characterStyleType === 'product-morphing' ? 'Detected from image' : (objectType || '—')],
-                      ['Category', characterStyleType === 'avatar' ? 'Custom Avatar' : characterStyleType === 'head-only' ? 'Head Only' : 'Living Product'],
+                      ['Category', CATEGORY_OPTIONS.find((o) => o.id === characterStyleType)?.headline ?? characterStyleType],
                       ['Character Type', characterStyleType === 'avatar' ? 'Avatar' : characterType || 'The Expert'],
                       ['Character Name', charName],
                       ['Vibe Tags', selectedVibes.join(', ')],

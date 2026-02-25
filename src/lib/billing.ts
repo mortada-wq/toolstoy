@@ -1,29 +1,22 @@
 /**
- * Billing provider configuration.
- * Set BILLING_PROVIDER via env: 'stripe' | 'aws_marketplace'
- * When Stripe: configure STRIPE_CHECKOUT_URL or create sessions server-side.
- * When aws_marketplace: use AWS Marketplace API.
+ * Billing API helpers.
+ * Uses server-side Stripe sessions (create-checkout-session, create-portal-session).
  */
-const BILLING_PROVIDER = (import.meta.env.VITE_BILLING_PROVIDER ?? 'stripe') as string
-const STRIPE_CHECKOUT_URL = import.meta.env.VITE_STRIPE_CHECKOUT_URL ?? ''
+import { createCheckoutSession, createPortalSession } from '@/lib/api'
+
 const CONTACT_SALES_EMAIL = 'hello@toolstoy.app'
 
-export function getCheckoutUrl(planId: 'pro' | 'studio'): string {
+/** Returns Stripe checkout URL for Pro, or mailto for Studio. */
+export async function getCheckoutUrl(planId: 'pro' | 'studio'): Promise<string> {
   if (planId === 'studio') {
     return `mailto:${CONTACT_SALES_EMAIL}?subject=Studio%20plan%20inquiry`
   }
-  if (BILLING_PROVIDER === 'stripe' && STRIPE_CHECKOUT_URL) {
-    return `${STRIPE_CHECKOUT_URL}?plan=pro`
-  }
-  if (BILLING_PROVIDER === 'aws_marketplace') {
-    return '/dashboard/billing#plans'
-  }
-  return `mailto:${CONTACT_SALES_EMAIL}?subject=Pro%20plan%20upgrade`
+  const { url } = await createCheckoutSession('pro')
+  return url
 }
 
-export function getManageBillingUrl(): string {
-  if (BILLING_PROVIDER === 'stripe') {
-    return import.meta.env.VITE_STRIPE_PORTAL_URL ?? `mailto:${CONTACT_SALES_EMAIL}`
-  }
-  return `mailto:${CONTACT_SALES_EMAIL}`
+/** Returns Stripe customer portal URL. */
+export async function getManageBillingUrl(): Promise<string> {
+  const { url } = await createPortalSession()
+  return url
 }

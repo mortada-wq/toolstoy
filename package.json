@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:migrate": "node database/run-migration.js database/migrations/010_billing_fields.sql"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.995.0",
@@ -17,7 +18,8 @@
     "pg": "^8.13.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.13.0"
+    "react-router-dom": "^7.13.0",
+    "stripe": "^20.3.1"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.21.0",

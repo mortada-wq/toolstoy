@@ -5,4 +5,7 @@ export const apiMerchants = defineFunction({
   entry: './handler.ts',
   timeoutSeconds: 15,
   memoryMB: 256,
+  environment: {
+    DATABASE_URL: process.env.DATABASE_URL || 'postgresql://placeholder',
+  },
 })

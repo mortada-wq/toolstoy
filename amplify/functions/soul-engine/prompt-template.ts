@@ -437,6 +437,88 @@ export function formatCharacterType(type: string): string {
 export const LIVING_PRODUCT_NEGATIVE_PROMPT =
   'angry, mean, stern, aggressive, flat, 2D sticker, human skin, organic limbs, realistic human hands, thin lines, blurry, asymmetrical face'
 
+// ============================================================================
+// Head Only (3D-style floating head)
+// ============================================================================
+
+/** Negative prompt for Head Only — avoid full body, human, text. */
+export const HEAD_ONLY_NEGATIVE_PROMPT =
+  'full body, full figure, torso, arms, legs, human face, realistic human, creature face, person, text, watermark, logo, blurry, distorted, multiple characters, cropped, out of frame'
+
+/** Style presets for Head Only 3D output. */
+export type HeadOnlyStylePreset = 'robot' | 'cartoon-3d' | 'mascot' | 'default'
+
+const HEAD_ONLY_STYLE_DESCRIPTIONS: Record<HeadOnlyStylePreset, string> = {
+  robot: '3D-rendered cartoon robot head. Rounded helmet-like casing, modular shapes, friendly wide eyes, soft matte lighting. Chibi/kawaii aesthetic, clean surfaces.',
+  'cartoon-3d': '3D-rendered cartoon head. Rounded, smooth surfaces, soft studio lighting, chibi/kawaii aesthetic. Clean, friendly, approachable.',
+  mascot: '3D-rendered mascot head. Rounded, playful, friendly. Soft lighting, vibrant colors, suitable for e-commerce and chat widgets.',
+  default: '3D-rendered cartoon head. Rounded, smooth surfaces, soft lighting, chibi/kawaii aesthetic. Clean, friendly, approachable.',
+}
+
+/**
+ * Builds the Head Only prompt for IMAGE_VARIATION (reference image + 3D-style output).
+ */
+export function buildHeadOnlyPrompt(options: {
+  stylePreset?: HeadOnlyStylePreset
+  productName?: string
+  vibeTags?: string[]
+  productColors?: string
+}): string {
+  const { stylePreset = 'default', productName = 'character', vibeTags = [], productColors = '' } = options
+  const styleDesc = HEAD_ONLY_STYLE_DESCRIPTIONS[stylePreset]
+  const vibeStr = vibeTags.length ? ` Personality: ${vibeTags.join(', ')}.` : ''
+  const colorHint = productColors ? ` Use colors inspired by: ${productColors}.` : ''
+  return `Transform this reference into a 3D-rendered cartoon head. ${styleDesc}
+Output: Head and shoulders only, centered, facing camera. Plain white or transparent background.
+Quality: Clean 3D render, high detail, friendly expression. Suitable for chat widget.${colorHint}${vibeStr}
+Product context: ${productName}.`
+}
+
+// ============================================================================
+// Avatar (full body, no background)
+// ============================================================================
+
+/** Negative prompt for Avatar — no background, clean output. */
+export const AVATAR_NEGATIVE_PROMPT =
+  'background, scenery, environment, landscape, room, indoor, outdoor, blurry, low quality, distorted, deformed, text, watermark, logo, multiple characters, cropped, out of frame, amateur'
+
+/** Style presets for Avatar full-body output. */
+export type AvatarStylePreset = 'professional' | 'cartoon-3d' | 'mascot' | 'casual'
+
+const AVATAR_STYLE_DESCRIPTIONS: Record<AvatarStylePreset, string> = {
+  professional: 'Professional illustrated full-body character. Polished vector style, clean lines, corporate-friendly. Standing pose, confident posture.',
+  'cartoon-3d': '3D-rendered full-body cartoon character. Rounded, smooth surfaces, soft lighting, chibi/kawaii aesthetic. Standing pose.',
+  mascot: 'Full-body mascot character. Playful, friendly, vibrant colors. Suitable for e-commerce and brand. Standing pose.',
+  casual: 'Casual full-body character. Relaxed, approachable, modern illustration style. Standing pose.',
+}
+
+/**
+ * Builds the Avatar prompt for IMAGE_VARIATION (reference image + full body, no background).
+ */
+export function buildAvatarPrompt(options: {
+  stylePreset?: AvatarStylePreset
+  productName?: string
+  vibeTags?: string[]
+  productColors?: string
+  avatarConfig?: AvatarConfig
+}): string {
+  const {
+    stylePreset = 'professional',
+    productName = 'character',
+    vibeTags = [],
+    productColors = '',
+    avatarConfig,
+  } = options
+  const styleDesc = AVATAR_STYLE_DESCRIPTIONS[stylePreset]
+  const vibeStr = vibeTags.length ? ` Personality: ${vibeTags.join(', ')}.` : ''
+  const colorHint = productColors ? ` Use colors inspired by: ${productColors}.` : ''
+  const appearanceHint = avatarConfig ? ` Appearance hints: ${formatAvatarConfig(avatarConfig)}.` : ''
+  return `Transform this reference into a full-body character. ${styleDesc}
+Output: Full body, head to feet, centered, standing pose. NO background — transparent or solid color only.
+Quality: Clean illustration, high detail, professional. Suitable for e-commerce and chat widgets.${appearanceHint}${colorHint}${vibeStr}
+Product context: ${productName}.`
+}
+
 /** Living Product prompt template with anatomy placeholders. */
 const LIVING_PRODUCT_TEMPLATE = `Reference: Maintain the exact materials and industrial finish of the {object_name}. Render in centered, symmetrical front-view.
 The Face: Locate the {face_placement} of the {object_name}. Protrude facial features with high-relief 3D depth. Sculpt large eyes and an exaggeratedly happy smile.

@@ -2,14 +2,15 @@ import type { SQSEvent, SQSHandler } from 'aws-lambda'
 import { analyzeImage, type ImageAnalysisResult } from './image-analysis'
 import { analyzeProductAnatomy } from './anatomy-analyzer'
 import {
-  retrieveActivePromptTemplate,
-  processTemplate,
   formatColors,
   formatVibeTags,
   formatAvatarConfig,
   buildLivingProductPrompt,
+  buildHeadOnlyPrompt,
+  buildAvatarPrompt,
   LIVING_PRODUCT_NEGATIVE_PROMPT,
-  type TemplateVariables,
+  HEAD_ONLY_NEGATIVE_PROMPT,
+  AVATAR_NEGATIVE_PROMPT,
   type AvatarConfig,
 } from './prompt-template'
 import {
@@ -48,6 +49,10 @@ interface GenerateCharacterRequest {
   avatarConfig?: AvatarConfig
   vibeTags: string[]
   merchantId: string
+  /** Head Only: style preset for 3D output (robot, cartoon-3d, mascot) */
+  headOnlyStylePreset?: 'robot' | 'cartoon-3d' | 'mascot' | 'default'
+  /** Avatar: style preset for full-body output */
+  avatarStylePreset?: 'professional' | 'cartoon-3d' | 'mascot' | 'casual'
 }
 
 interface CharacterVariation {
@@ -154,13 +159,22 @@ async function handleGenerateCharacterVariations(
     let finalPrompt: string
     let negativePrompt: string
 
-    if (request.avatarConfig) {
-      // Avatar mode: build prompt from avatar customization (premium, brand-ready output)
-      const avatarDescription = formatAvatarConfig(request.avatarConfig)
-      const vibeStr = formatVibeTags(request.vibeTags)
-      finalPrompt = `Premium illustrated character design for e-commerce. Professional brand mascot style. Appearance: ${avatarDescription}. Art direction: polished vector illustration, clean lines, consistent lighting, high-fidelity detail. Suitable for corporate and retail use. Personality: ${vibeStr}. Product context: ${request.productName}.`
-      negativePrompt = 'blurry, low quality, distorted, deformed, amateur, childish, meme, cartoonish exaggeration, text, watermark, logo, realistic photo, multiple characters, cropped, out of frame, unprofessional, cheap'
-      console.log(`[${jobId}] Using avatar config prompt (${finalPrompt.length} chars)`)
+    if (request.characterStyleType === 'avatar') {
+      // Avatar: IMAGE_VARIATION with reference + full body, no background
+      const imageAnalysis: ImageAnalysisResult = await analyzeImage(request.productImage)
+      console.log(`[${jobId}] Avatar image analysis:`, {
+        category: imageAnalysis.category,
+        colorCount: imageAnalysis.colors.length,
+      })
+      finalPrompt = buildAvatarPrompt({
+        stylePreset: request.avatarStylePreset ?? 'professional',
+        productName: request.objectType ?? request.productName,
+        vibeTags: request.vibeTags,
+        productColors: formatColors(imageAnalysis.colors),
+        avatarConfig: request.avatarConfig,
+      })
+      negativePrompt = AVATAR_NEGATIVE_PROMPT
+      console.log(`[${jobId}] Avatar prompt (${finalPrompt.length} chars)`)
     } else {
       const isLivingProduct = request.characterStyleType === 'product-morphing'
 
@@ -172,32 +186,28 @@ async function handleGenerateCharacterVariations(
         negativePrompt = LIVING_PRODUCT_NEGATIVE_PROMPT
         console.log(`[${jobId}] Living Product prompt (${finalPrompt.length} chars)`)
       } else {
-        // Head-only: use template + image analysis
-        const template = await retrieveActivePromptTemplate()
-        console.log(`[${jobId}] Retrieved template: ${template.name} (v${(template as { version?: number }).version})`)
+        // Head-only: IMAGE_VARIATION with reference + 3D-style prompt
         const imageAnalysis: ImageAnalysisResult = await analyzeImage(request.productImage)
-        console.log(`[${jobId}] Image analysis complete:`, {
+        console.log(`[${jobId}] Head-only image analysis:`, {
           category: imageAnalysis.category,
           colorCount: imageAnalysis.colors.length,
         })
-        const nameForPrompt = request.objectType ?? request.productName
-        const templateVariables: TemplateVariables = {
-          PRODUCT_NAME: nameForPrompt,
-          CHARACTER_TYPE: request.characterType,
-          PRODUCT_TYPE: imageAnalysis.category,
-          PRODUCT_COLORS: formatColors(imageAnalysis.colors),
-          VIBE_TAGS: formatVibeTags(request.vibeTags),
-        }
-        const processed = processTemplate(template, templateVariables)
-        finalPrompt = processed.prompt
-        negativePrompt = processed.negativePrompt
-        negativePrompt += ', human face, human head, creature face, person, human, anthropomorphic face, facial features'
-        console.log(`[${jobId}] Processed prompt template (${finalPrompt.length} chars)`)
+        finalPrompt = buildHeadOnlyPrompt({
+          stylePreset: request.headOnlyStylePreset ?? 'default',
+          productName: request.objectType ?? request.productName,
+          vibeTags: request.vibeTags,
+          productColors: formatColors(imageAnalysis.colors),
+        })
+        negativePrompt = HEAD_ONLY_NEGATIVE_PROMPT
+        console.log(`[${jobId}] Head-only prompt (${finalPrompt.length} chars)`)
       }
     }
 
-    // Step 5: Generate 3 image variations with unique seeds
-    const useImageVariation = request.characterStyleType === 'product-morphing'
+    // Step 5: Generate 3 image variations — IMAGE_VARIATION for product-morphing, head-only, avatar
+    const useImageVariation =
+      request.characterStyleType === 'product-morphing' ||
+      request.characterStyleType === 'head-only' ||
+      request.characterStyleType === 'avatar'
     console.log(`[${jobId}] Generating 3 image variations...`, useImageVariation ? '(IMAGE_VARIATION)' : '')
     const imageVariations: ImageVariation[] = await generateImageVariations(
       finalPrompt,

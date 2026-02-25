@@ -18,6 +18,7 @@ import { apiScraper } from './functions/api-scraper/resource'
 import { apiAdmin } from './functions/api-admin/resource'
 import { soulEngine } from './functions/soul-engine/resource'
 import { apiBedrock } from './functions/api-bedrock/resource'
+import { apiBilling } from './functions/api-billing/resource'
 
 const backend = defineBackend({
   auth,
@@ -28,6 +29,7 @@ const backend = defineBackend({
   apiScraper,
   apiAdmin,
   apiBedrock,
+  apiBilling,
   soulEngine,
 })
 
@@ -77,6 +79,10 @@ const adminIntegration = new HttpLambdaIntegration(
 const bedrockIntegration = new HttpLambdaIntegration(
   'BedrockLambdaIntegration',
   backend.apiBedrock.resources.lambda
+)
+const billingIntegration = new HttpLambdaIntegration(
+  'BillingLambdaIntegration',
+  backend.apiBilling.resources.lambda
 )
 
 const httpApi = new HttpApi(apiStack, 'ToolstoyHttpApi', {
@@ -216,6 +222,25 @@ httpApi.addRoutes({
   path: '/api/prompt-templates',
   methods: [HttpMethod.GET, HttpMethod.POST, HttpMethod.OPTIONS],
   integration: bedrockIntegration,
+  authorizer: userPoolAuthorizer,
+})
+
+// Billing: webhook has NO authorizer (Stripe sends raw POST)
+httpApi.addRoutes({
+  path: '/api/billing/webhook',
+  methods: [HttpMethod.POST, HttpMethod.OPTIONS],
+  integration: billingIntegration,
+})
+httpApi.addRoutes({
+  path: '/api/billing/create-checkout-session',
+  methods: [HttpMethod.POST, HttpMethod.OPTIONS],
+  integration: billingIntegration,
+  authorizer: userPoolAuthorizer,
+})
+httpApi.addRoutes({
+  path: '/api/billing/create-portal-session',
+  methods: [HttpMethod.POST, HttpMethod.OPTIONS],
+  integration: billingIntegration,
   authorizer: userPoolAuthorizer,
 })
 

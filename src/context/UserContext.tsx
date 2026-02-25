@@ -36,19 +36,12 @@ interface UserContextValue {
   refreshUser: () => Promise<void>
 }
 
-// Admin roles configuration
-const SUPER_ADMINS = [
-  'mortadagzar@gmail.com',
-  'mortada@howvie.com',
-]
+// Admin roles configuration — sole admin: mortadagzar@gmail.com
+const SUPER_ADMINS = ['mortadagzar@gmail.com']
 
-const ADMINS: string[] = [
-  // Admins can access all admin features but cannot manage other admins
-]
+const ADMINS: string[] = []
 
-const ASSISTANTS: string[] = [
-  // Assistants have read-only access to admin dashboard
-]
+const ASSISTANTS: string[] = []
 
 function getAdminRole(email: string): AdminRole {
   const lowerEmail = email.toLowerCase()

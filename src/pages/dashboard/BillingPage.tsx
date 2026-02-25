@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMerchant } from '@/hooks/useMerchant'
 import { usePersonas } from '@/hooks/usePersonas'
@@ -98,6 +99,7 @@ function UsageMeter({
 export function BillingPage() {
   const { merchant, isLoading: merchantLoading, error: merchantError } = useMerchant()
   const { personas, isLoading: personasLoading } = usePersonas()
+  const [billingLoading, setBillingLoading] = useState<string | null>(null)
 
   const plan = merchant?.plan ?? 'free'
   const limits = merchant?.plan_limits ?? { characters: 1, conversations: 100, qa_pairs: 10 }
@@ -190,12 +192,22 @@ export function BillingPage() {
                   </Link>
                 )}
                 {plan !== 'free' && (
-                  <a
-                    href={getManageBillingUrl()}
-                    className="inline-block border border-[#E5E7EB] bg-white text-[#1A1A1A] font-semibold text-[14px] px-5 py-3 rounded-lg hover:bg-[#FAFAFA]"
+                  <button
+                    type="button"
+                    disabled={!!billingLoading}
+                    onClick={async () => {
+                      setBillingLoading('portal')
+                      try {
+                        const url = await getManageBillingUrl()
+                        window.location.href = url
+                      } catch {
+                        setBillingLoading(null)
+                      }
+                    }}
+                    className="inline-block border border-[#E5E7EB] bg-white text-[#1A1A1A] font-semibold text-[14px] px-5 py-3 rounded-lg hover:bg-[#FAFAFA] disabled:opacity-60"
                   >
-                    Manage Billing
-                  </a>
+                    {billingLoading === 'portal' ? 'Opening…' : 'Manage Billing'}
+                  </button>
                 )}
               </div>
             </div>
@@ -257,18 +269,28 @@ export function BillingPage() {
                         <div className="mt-6">
                           {p.id === 'studio' ? (
                             <a
-                              href={getCheckoutUrl('studio')}
+                              href="mailto:hello@toolstoy.app?subject=Studio%20plan%20inquiry"
                               className="block w-full bg-[#1A1A1A] text-white font-semibold text-[14px] py-3 rounded-lg text-center hover:opacity-90"
                             >
                               Talk to Us
                             </a>
                           ) : (
-                            <a
-                              href={getCheckoutUrl('pro')}
-                              className="block w-full bg-white text-[#1A1A1A] font-semibold text-[14px] py-3 rounded-lg text-center hover:bg-[#F5F5F5]"
+                            <button
+                              type="button"
+                              disabled={!!billingLoading}
+                              onClick={async () => {
+                                setBillingLoading('checkout')
+                                try {
+                                  const url = await getCheckoutUrl('pro')
+                                  window.location.href = url
+                                } catch {
+                                  setBillingLoading(null)
+                                }
+                              }}
+                              className="block w-full bg-white text-[#1A1A1A] font-semibold text-[14px] py-3 rounded-lg text-center hover:bg-[#F5F5F5] disabled:opacity-60"
                             >
-                              {p.action}
-                            </a>
+                              {billingLoading === 'checkout' ? 'Opening…' : p.action}
+                            </button>
                           )}
                         </div>
                       )}

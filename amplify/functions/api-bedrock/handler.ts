@@ -49,6 +49,8 @@ interface GenerateCharacterRequest {
   avatarConfig?: AvatarConfig
   vibeTags: string[]
   merchantId: string
+  headOnlyStylePreset?: 'robot' | 'cartoon-3d' | 'mascot' | 'default'
+  avatarStylePreset?: 'professional' | 'cartoon-3d' | 'mascot' | 'casual'
 }
 
 interface GenerateStatesRequest {
@@ -128,11 +130,7 @@ function validateGenerateCharacterRequest(body: Record<string, unknown>): string
   if (!validTypes.includes(body.characterType as string)) {
     return `characterType must be one of: ${validTypes.join(', ')}`
   }
-  if (body.characterType === 'avatar') {
-    if (!body.avatarConfig || typeof body.avatarConfig !== 'object') {
-      return 'avatarConfig is required when characterType is avatar'
-    }
-  }
+  // avatarConfig is optional for avatar (used as hints; productImage is required for IMAGE_VARIATION)
   if (!Array.isArray(body.vibeTags)) {
     return 'vibeTags is required and must be an array'
   }
@@ -379,6 +377,8 @@ const handler: APIGatewayProxyHandlerV2 = async (event) => {
         avatarConfig: body.avatarConfig as GenerateCharacterRequest['avatarConfig'],
         vibeTags: body.vibeTags as string[],
         merchantId: sub,
+        headOnlyStylePreset: body.headOnlyStylePreset as GenerateCharacterRequest['headOnlyStylePreset'],
+        avatarStylePreset: body.avatarStylePreset as GenerateCharacterRequest['avatarStylePreset'],
       }
       
       // Invoke Soul Engine Lambda

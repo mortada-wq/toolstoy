@@ -1,10 +1,20 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { signUp } from 'aws-amplify/auth'
+import { useUser } from '@/context/UserContext'
 import logoSrc from '@/assets/Finaltoolstoy.svg'
 
 export function SignUpPage() {
   const navigate = useNavigate()
+  const { isAuthenticated, isLoading: authLoading } = useUser()
+
+  // Already signed in → go straight to dashboard
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [authLoading, isAuthenticated, navigate])
+
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -41,14 +51,29 @@ export function SignUpPage() {
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Sign up failed. Try again.'
+      const isExistingUser =
+        msg.includes('User already exists') ||
+        msg.includes('UsernameExistsException') ||
+        msg.includes('already exists')
+      if (isExistingUser) {
+        navigate('/signin', { state: { email: email.trim() }, replace: true })
+        return
+      }
       setError(
-        msg.includes('User already exists') ? 'An account with this email already exists. Sign in instead.'
-          : msg.includes('password') ? 'Password must be at least 8 characters with uppercase, number, and symbol.'
+        msg.includes('password') ? 'Password must be at least 8 characters with uppercase, number, and symbol.'
           : msg
       )
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (authLoading || isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5]">
+        <div className="w-8 h-8 rounded-full border-2 border-[#1A1A1A] border-t-transparent animate-spin" aria-label="Loading" />
+      </div>
+    )
   }
 
   return (
