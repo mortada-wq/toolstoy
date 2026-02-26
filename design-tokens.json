@@ -2,20 +2,20 @@
   "brand": { "name": "Toolstoy", "domain": "toolstoy.app" },
   "color": {
     "background": {
-      "primary": "#2E3340",
-      "secondary": "#252A36",
-      "overlay": "#1E2330"
+      "primary": "#36454F",
+      "secondary": "#3C444A",
+      "overlay": "#4A5057"
     },
     "brand": {
       "teal": "#70E6D2",
-      "orange": "#FF7A2F",
-      "coral": "#F4957A",
+      "orange": "#FF8C00",
+      "coral": "#CD5C5C",
       "logoOrange": "#EF8244",
       "logoBurnt": "#BA6339"
     },
     "neutral": {
       "steelBlue": "#8FA3B5",
-      "cream": "#FDF0E0",
+      "cream": "#F5F5DC",
       "slateText": "#C8D0DC"
     }
   },
@@ -38,11 +38,11 @@
   },
   "components": {
     "button": {
-      "primary": { "background": "#FF7A2F", "text": "#FDF0E0", "borderRadius": "9999px", "padding": "12px 24px", "fontWeight": 600 },
+      "primary": { "background": "#FF8C00", "text": "#F5F5DC", "borderRadius": "9999px", "padding": "12px 24px", "fontWeight": 600 },
       "secondary": { "background": "transparent", "border": "1.5px solid rgba(112,230,210,0.40)", "text": "#70E6D2", "borderRadius": "9999px" }
     },
-    "card": { "background": "#252A36", "border": "1.5px solid rgba(143,163,181,0.15)", "borderRadius": "16px", "padding": "24px" },
-    "input": { "background": "#1E2330", "border": "1.5px solid rgba(143,163,181,0.25)", "borderRadius": "12px", "padding": "12px 16px", "focusBorder": "1.5px solid rgba(112,230,210,0.60)" }
+    "card": { "background": "#3C444A", "border": "1.5px solid rgba(143,163,181,0.15)", "borderRadius": "16px", "padding": "24px" },
+    "input": { "background": "#4A5057", "border": "1.5px solid rgba(143,163,181,0.25)", "borderRadius": "12px", "padding": "12px 16px", "focusBorder": "1.5px solid rgba(112,230,210,0.60)" }
   },
   "logo": {
     "darkMode": "/logos/logo-darkmode.svg",

@@ -1,6 +1,42 @@
+@import './styles/theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Figma design — gradient animated stroke */
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.85;
+  }
+}
+
+.animate-gradient-flow {
+  background-size: 300% 100%;
+  animation: gradientFlow 4s ease infinite;
+}
+
+.animate-breathe {
+  animation: breathe 2.5s ease-in-out infinite;
+}
 
 @keyframes msgSlideUp {
   from {
@@ -104,8 +140,8 @@ html {
 
 body {
   font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
-  background-color: #2E3340;
-  color: #FDF0E0;
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;

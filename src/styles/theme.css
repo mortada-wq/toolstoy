@@ -1,0 +1,62 @@
+/* Toolstoy Figma Theme — CSS variables for design consistency */
+
+:root {
+  /* Backgrounds */
+  --primary-bg: #36454f;
+  --secondary-bg: #3c444a;
+  --overlay-bg: #4a5057;
+  --slate-gray: #708090;
+  --slate-blue: #778899;
+
+  /* Orange Spectrum */
+  --primary-cta: #ff8c00;
+  --bright-orange: #ff7f00;
+  --burnt-orange: #d2691e;
+  --copper: #cc5500;
+  --cta-hover: #b7410e;
+
+  /* Golden/Bronze Tones */
+  --golden-primary: #daa520;
+  --golden-bright: #d4af37;
+  --border-accent: #b8860b;
+
+  /* Cream/Beige Spectrum */
+  --primary-text: #f5f5dc;
+  --warm-cream: #fff8dc;
+  --wheat: #f5deb3;
+  --peach: #ffe4b5;
+  --tan: #d2b48c;
+  --almond: #eed9c4;
+  --secondary-text: #ffdab9;
+
+  /* Utility */
+  --muted-text: #6a6a6a;
+  --border-divider: #b0b0b0;
+  --feedback-alert: #cd5c5c;
+
+  /* Semantic mappings */
+  --background: var(--primary-bg);
+  --foreground: var(--primary-text);
+  --card: var(--secondary-bg);
+  --card-foreground: var(--primary-text);
+  --primary: var(--primary-cta);
+  --primary-foreground: var(--primary-text);
+  --secondary: var(--secondary-bg);
+  --secondary-foreground: var(--primary-text);
+  --muted: var(--muted-text);
+  --muted-foreground: var(--secondary-text);
+  --accent: var(--border-accent);
+  --accent-foreground: var(--primary-text);
+  --destructive: var(--feedback-alert);
+  --border: var(--border-accent);
+  --input-background: var(--overlay-bg);
+  --ring: var(--primary-cta);
+
+  /* Typography */
+  --font-size: 16px;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+
+  /* Radius */
+  --radius: 1rem;
+}

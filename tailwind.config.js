@@ -12,32 +12,42 @@ export default {
         mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       colors: {
-        // Design system: DESIGN.md + design-tokens.json
+        // Figma theme — spiral palette
         toolstoy: {
-          // Backgrounds
+          // Backgrounds (Figma theme.css)
           bg: {
-            primary: '#2E3340',
-            secondary: '#252A36',
-            overlay: '#1E2330',
+            primary: '#36454f',
+            secondary: '#3c444a',
+            overlay: '#4a5057',
           },
-          // Brand
+          // Brand (spiral palette)
           teal: '#70E6D2',
-          orange: '#FF7A2F',
-          coral: '#F4957A',
+          orange: '#FF8C00',
+          coral: '#CD5C5C',
           logoOrange: '#EF8244',
           logoBurnt: '#BA6339',
+          // Spiral palette
+          vibrantOrange: '#FF8C00',
+          goldenrod: '#DAA520',
+          bronze: '#B8860B',
+          rustOrange: '#B7410E',
+          cream: '#F5F5DC',
+          palePeach: '#FFDAB9',
           // Neutrals
           steelBlue: '#8FA3B5',
-          cream: '#FDF0E0',
           slateText: '#C8D0DC',
-          charcoal: '#2E3340',
-          // Legacy aliases (map to design system)
-          white: '#FDF0E0',
-          canvas: '#252A36',
-          border: 'rgba(143,163,181,0.15)',
-          nearblack: '#FDF0E0',
+          charcoal: '#36454F',
+          // Figma golden/border accents
+          borderAccent: '#b8860b',
+          goldenPrimary: '#daa520',
+          secondaryText: '#ffdab9',
+          // Legacy aliases (map to Figma theme)
+          white: '#F5F5DC',
+          canvas: '#3c444a',
+          border: 'rgba(184,134,11,0.4)',
+          nearblack: '#F5F5DC',
           muted: '#8FA3B5',
-          dark: '#2E3340',
+          dark: '#36454F',
           subtext: '#C8D0DC',
         },
       },
@@ -67,7 +77,7 @@ export default {
         'toolstoy-md': '0 4px 16px rgba(0,0,0,0.08)',
         'toolstoy-hover': '0 4px 16px rgba(0,0,0,0.08)',
         'teal-glow': '0 0 20px rgba(112,230,210,0.25)',
-        'orange-glow': '0 0 20px rgba(255,122,47,0.30)',
+        'orange-glow': '0 0 20px rgba(255,140,0,0.30)',
         'button-glow': '0 0 15px rgba(255,122,47,0.2)',
       },
       transitionDuration: {
