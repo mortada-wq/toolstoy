@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { signUp } from 'aws-amplify/auth'
 import { useUser } from '@/context/UserContext'
-import logoSrc from '@/assets/Finaltoolstoy.svg'
 
 export function SignUpPage() {
   const navigate = useNavigate()
@@ -82,7 +81,7 @@ export function SignUpPage() {
         <div className="flex justify-center mb-8">
           <div className="bg-toolstoy-charcoal rounded-lg px-5 py-3">
             <img
-              src={logoSrc}
+              src="/logos/logo-toolstoy.png"
               alt="toolstoy"
               className="h-[19.2px] w-auto object-contain brightness-0 invert"
             />

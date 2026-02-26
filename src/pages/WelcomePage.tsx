@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import logoSrc from '@/assets/Finaltoolstoy.svg'
 
 const ONBOARDING_KEY = 'toolstoy_onboarding_complete'
 
@@ -38,7 +37,7 @@ export function WelcomePage() {
         <div className="max-w-[560px] w-full text-center">
           <Link to="/" className="inline-block mb-8">
             <img
-              src={logoSrc}
+              src="/logos/logo-toolstoy.png"
               alt="toolstoy"
               className="h-[22.4px] w-auto"
               style={{ filter: 'contrast(0) brightness(0)' }}

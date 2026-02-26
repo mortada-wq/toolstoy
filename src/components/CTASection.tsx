@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom'
 import { ScrollReveal } from './ScrollReveal'
+import { GradientStroke } from './GradientStroke'
 
 export function CTASection() {
   return (
-    <section className="px-4 md:px-6 py-20 sm:py-[100px] lg:py-[140px] bg-toolstoy-bg-overlay border-y border-toolstoy-steelBlue/15">
+    <section className="relative px-4 md:px-6 py-20 sm:py-[100px] lg:py-[140px] bg-toolstoy-bg-overlay">
+      <GradientStroke position="top" size={2} />
+      <GradientStroke position="bottom" size={2} />
       <div className="max-w-[640px] mx-auto text-center">
         <ScrollReveal delay={0}>
           <h2 className="text-[28px] sm:text-4xl lg:text-[52px] font-bold text-toolstoy-cream leading-tight tracking-[-0.02em]">

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { GradientStroke } from './GradientStroke'
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -19,11 +20,12 @@ export function Navbar() {
       onClick={() => setMobileOpen(false)}
       aria-hidden={!mobileOpen}
     />
-    <nav className="sticky top-0 z-50 bg-toolstoy-bg-primary/95 backdrop-blur-xl border-b border-toolstoy-steelBlue/15 h-14 md:h-16 flex items-center justify-between pl-6 pr-4 md:pl-10 md:pr-8">
-      {/* Logo - design system: logo-darkmode for #2E3340 backgrounds */}
+    <nav className="relative sticky top-0 z-50 bg-toolstoy-bg-primary/95 backdrop-blur-xl h-14 md:h-16 flex items-center justify-between pl-6 pr-4 md:pl-10 md:pr-8">
+      <GradientStroke position="bottom" size={2} />
+      {/* Logo - universal Toolstoy logo (bird T + oolstoy) */}
       <Link to="/" className="flex-shrink-0 py-2">
         <img
-          src="/logos/logo-darkmode.svg"
+          src="/logos/logo-toolstoy.png"
           alt="Toolstoy"
           className="h-10 sm:h-12 w-auto object-contain min-w-[120px]"
         />

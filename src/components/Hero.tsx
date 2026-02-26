@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom'
 import { ScrollReveal } from './ScrollReveal'
 
+import { GradientStroke } from './GradientStroke'
+
 export function Hero() {
   return (
     <section className="relative px-4 md:px-6 py-20 md:py-28 lg:py-[140px] bg-toolstoy-bg-primary">
+      <GradientStroke position="bottom" size={2} />
       <div className="max-w-[720px] mx-auto text-center relative">
         <ScrollReveal delay={0}>
           <h1 className="text-[36px] leading-[1.05] tracking-[-0.02em] sm:text-5xl lg:text-[72px] font-bold text-toolstoy-cream mb-8">

@@ -122,10 +122,10 @@ export function Sidebar({ mobileOpen, onClose, isAdmin }: SidebarProps) {
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Logo - design system */}
+        {/* Logo - universal Toolstoy logo */}
         <Link to={isAdmin ? '/admin' : '/dashboard'} className="px-5 py-6" onClick={() => onClose()}>
           <img
-            src="/logos/logo-darkmode.svg"
+            src="/logos/logo-toolstoy.png"
             alt="Toolstoy"
             className="h-8 w-auto object-contain min-w-[100px]"
           />

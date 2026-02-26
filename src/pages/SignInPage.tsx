@@ -95,7 +95,7 @@ export function SignInPage() {
       <div className="bg-toolstoy-bg-secondary border border-toolstoy-steelBlue/15 rounded-toolstoy-lg p-8 md:p-12 w-[92vw] md:w-[440px] shadow-toolstoy-md max-w-[440px]">
         <div className="flex justify-center mb-8">
           <img
-            src="/logos/logo-darkmode.svg"
+            src="/logos/logo-toolstoy.png"
             alt="Toolstoy"
             className="h-8 w-auto object-contain min-w-[100px]"
           />

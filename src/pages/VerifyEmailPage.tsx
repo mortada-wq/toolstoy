@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { confirmSignUp, resendSignUpCode } from 'aws-amplify/auth'
-import logoSrc from '@/assets/Finaltoolstoy.svg'
 
 export function VerifyEmailPage() {
   const [searchParams] = useSearchParams()
@@ -133,7 +132,7 @@ export function VerifyEmailPage() {
         <div className="flex justify-center mb-8">
           <div className="bg-toolstoy-charcoal rounded-lg px-5 py-3">
             <img
-              src={logoSrc}
+              src="/logos/logo-toolstoy.png"
               alt="toolstoy"
               className="h-[19.2px] w-auto object-contain"
               style={{ filter: 'brightness(0) invert(1)' }}

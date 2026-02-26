@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { GradientStroke } from './GradientStroke'
 
 export function Footer() {
   const links = [
@@ -16,11 +17,12 @@ export function Footer() {
   ]
 
   return (
-    <footer className="bg-toolstoy-bg-secondary border-t border-toolstoy-steelBlue/15 px-4 md:px-6 py-14">
+    <footer className="relative bg-toolstoy-bg-secondary px-4 md:px-6 py-14">
+      <GradientStroke position="top" size={2} />
       <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
         <Link to="/" className="flex-shrink-0">
           <img
-            src="/logos/logo-darkmode.svg"
+            src="/logos/logo-toolstoy.png"
             alt="Toolstoy"
             className="h-[22.4px] w-auto object-contain min-w-[100px]"
           />
